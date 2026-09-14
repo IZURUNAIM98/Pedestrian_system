@@ -1,0 +1,351 @@
+SMARTCROSS
+SCHOOL-ONLY REFINEMENT OF THE EXISTING 20 VIOLATION CASES
+AND THEIR PEDESTRIAN-SAFETY COUNTERMEASURES
+
+Purpose
+-------
+Keep the existing Normal Crossing scenario unchanged. Apply only small,
+school-specific modifications to the existing 20 cases when the user selects
+the School Crossing scenario.
+
+Scope rules
+-----------
+1. Do not replace the existing 20-case catalogue.
+2. Do not apply the school-zone treatment to the Normal Crossing scenario.
+3. Retain the existing webpage layout, controls and general seven-stage
+   simulation sequence.
+4. Change only the school context, affected pedestrian, actor behaviour,
+   warning text, detection response and final countermeasure where necessary.
+5. A pupil may enter the crossing only when WALK is displayed and conflicting
+   vehicles have stopped at their marked stopping points.
+6. Where both Vehicle A and Vehicle B conflict with the pupil movement, both
+   vehicles must stop before the crossing before WALK is released.
+7. Collision and fire cases are retained because they are part of the current
+   20-case catalogue, but they should be described as emergency outcomes rather
+   than ordinary driving offences.
+
+
+01. CROSSING-ZONE SPEEDING
+Existing case:
+Vehicle approaches the crossing above the configured safe speed.
+
+School-only modification:
+Present the event as speeding while the school-zone control is active during
+pupil arrival or departure. Use a pupil or pupil group as the affected road
+user. The school-zone markings and warnings appear only in the School Crossing
+scenario.
+
+School pedestrian countermeasure:
+Detect the excessive approach speed early, display a SCHOOL-ZONE SPEED alert,
+keep the pupil signal at WAIT, extend the vehicle stopping phase and release
+WALK only after the approaching vehicle has stopped safely.
+
+
+02. RED-SIGNAL VIOLATION
+Existing case:
+Vehicle crosses the stop line while its traffic signal is RED.
+
+School-only modification:
+Link the RED phase to an active pupil crossing request. Show pupils waiting at
+the school gate or crossing entrance before the vehicle breaches the signal.
+
+School pedestrian countermeasure:
+Keep the pupil signal at WAIT, sound a priority warning, highlight the violating
+vehicle and hold all pupil movement until the conflict area is clear and the
+controller has restored a safe protected phase.
+
+
+03. FAILURE TO YIELD
+Existing case:
+Vehicle does not yield to a pedestrian using the zebra crossing.
+
+School-only modification:
+Use a pupil group, optionally accompanied by a guardian or simulated crossing
+warden. The vehicle must approach visibly before failing to yield.
+
+School pedestrian countermeasure:
+Detect the pupil group, command both conflicting vehicles to stop near their
+marked stopping points and release WALK only after both vehicles are stationary.
+If either vehicle continues, retain WAIT and issue a failure-to-yield alert.
+
+
+04. VEHICLE STOPPED ON THE ZEBRA CROSSING
+Existing case:
+Vehicle enters the zebra crossing and stops on it.
+
+School-only modification:
+Show the vehicle blocking the direct pupil route between the school gate and
+the opposite footway. Once stopped on the crossing, the vehicle must remain in
+that blocked position and must not reverse unexpectedly.
+
+School pedestrian countermeasure:
+Withhold WALK, mark the zebra crossing as obstructed and direct pupils to remain
+inside the safe waiting area. Release the crossing only after the obstruction
+has been removed and the crossing is confirmed clear.
+
+
+05. ACCESSIBILITY OBSTRUCTION
+Existing case:
+Vehicle blocks the kerb ramp, tactile paving or accessible crossing route.
+
+School-only modification:
+Use a pupil with a mobility aid or visual impairment, accompanied where
+appropriate by a guardian. The obstruction should affect the route from the
+school gate to the crossing.
+
+School pedestrian countermeasure:
+Detect the blocked accessible path, display ACCESSIBLE ROUTE BLOCKED, prevent
+WALK from starting and require the vehicle to clear the kerb ramp and tactile
+route before the pupil movement is authorised.
+
+
+06. MOTORCYCLE FILTERING
+Existing case:
+Motorcycle filters past stopped or slow vehicles near the crossing.
+
+School-only modification:
+Place the motorcycle beside a school drop-off queue. The motorcycle should
+continue forward towards and across the stop line; it must not reverse before
+reaching the crossing.
+
+School pedestrian countermeasure:
+Use side-approach detection to identify the motorcycle, keep pupils at WAIT and
+delay WALK until the motorcycle has stopped or fully cleared the conflict area.
+Display MOTORCYCLE FILTERING IN SCHOOL ZONE.
+
+
+07. PREMATURE PEDESTRIAN MOVEMENT
+Existing case:
+Pedestrian attempts to cross before WALK is displayed.
+
+School-only modification:
+Use a pupil who moves towards the crossing edge but remains inside the protected
+waiting area. The pupil must not walk onto the zebra crossing while WAIT or STOP
+is displayed.
+
+School pedestrian countermeasure:
+Apply a strict signal interlock: pedestrian motion begins only during WALK and
+only after Vehicle A and Vehicle B have stopped where both are conflicting.
+Provide an audible or visual WAIT reminder suitable for school users.
+
+
+08. UNSAFE OVERTAKING
+Existing case:
+One vehicle overtakes another vehicle that has stopped for the crossing.
+
+School-only modification:
+Vehicle A yields to pupils while Vehicle B overtakes beside the school crossing
+or drop-off queue. Show only vehicle motion; no unnecessary red dotted path is
+required.
+
+School pedestrian countermeasure:
+Detect the overtaking trajectory, retain the pupil WAIT indication, issue an
+OVERTAKING AT SCHOOL CROSSING alert and allow pupils to move only after Vehicle B
+has stopped or cleared the crossing.
+
+
+09. WRONG-WAY APPROACH
+Existing case:
+Vehicle approaches the crossing against the intended traffic direction.
+
+School-only modification:
+Present the event as wrong-way travel within the school arrival or departure
+circulation route.
+
+School pedestrian countermeasure:
+Trigger a wrong-way warning as soon as the direction conflict is detected,
+freeze the pupil crossing request at WAIT and stop all conflicting vehicle
+movements before a protected pupil phase can begin.
+
+
+10. OPPOSING-LANE BYPASS
+Existing case:
+Vehicle uses the opposing lane to pass a queue near the crossing.
+
+School-only modification:
+The queue represents school arrival or collection traffic, and the bypassing
+vehicle approaches a pupil group screened by the queue.
+
+School pedestrian countermeasure:
+Monitor the opposing lane, warn pupils and the controller, keep WALK withheld
+and extend the clearance period until the bypassing vehicle has stopped or left
+the school crossing conflict zone.
+
+
+11. UNSAFE LANE CHANGE
+Existing case:
+Vehicle changes lane inside the crossing approach zone.
+
+School-only modification:
+The lane change occurs beside the school drop-off area and reduces visibility
+between the driver and pupils. Show the vehicle movement without an unnecessary
+red dotted path.
+
+School pedestrian countermeasure:
+Detect the lateral movement, cancel or delay the pending WALK phase and display
+UNSAFE LANE CHANGE - PUPILS WAIT. Restart the safe crossing sequence only after
+the vehicle is stable and the approach is clear.
+
+
+12. TAILGATING
+Existing case:
+A following vehicle travels too closely behind a vehicle yielding at the
+crossing.
+
+School-only modification:
+Vehicle A stops for pupils while Vehicle B closes the gap in the school-zone
+approach.
+
+School pedestrian countermeasure:
+Measure the unsafe following gap, hold pupils at WAIT and require Vehicle B to
+stop behind Vehicle A. WALK is released only when both vehicles are stationary
+and sufficient separation from the crossing is confirmed.
+
+
+13. DISTRACTED OR DELAYED DRIVER RESPONSE
+Existing case:
+Driver responds late to a pedestrian crossing demand.
+
+School-only modification:
+Show a delayed response while pupils are visible at the school crossing. The
+simulation should describe the observable late response without claiming to
+identify a specific private activity inside the vehicle.
+
+School pedestrian countermeasure:
+Issue an early attention alert, keep pupils at WAIT and extend the vehicle
+approach monitoring period. Begin WALK only after the vehicle has completed a
+safe stop.
+
+
+14. EMERGENCY BRAKING
+Existing case:
+Vehicle approaches, brakes sharply and stops near the crossing.
+
+School-only modification:
+Show Vehicle A in the approach stage first, followed by hazard detection,
+emergency braking and a complete stop before the school crossing line.
+
+School pedestrian countermeasure:
+Keep pupils at WAIT throughout the approach and braking stages. Confirm zero
+vehicle speed and a safe stopping position before changing the pupil signal to
+WALK. If the vehicle cannot stop safely, retain WAIT until the conflict clears.
+
+
+15. U-TURN AT THE CROSSING
+Existing case:
+Vehicle performs a U-turn within the crossing approach.
+
+School-only modification:
+Place the U-turn immediately outside the school gate or drop-off area. Vehicle A
+must follow a slow, smooth curved motion along the intended path so the sequence
+is easy to understand.
+
+School pedestrian countermeasure:
+Detect the turning trajectory, prevent pupils from entering the crossing and
+display U-TURN AT SCHOOL GATE. Release WALK only after the vehicle has completed
+the turn and left the pupil conflict area.
+
+
+16. VULNERABLE PEDESTRIAN CONFLICT
+Existing case:
+Vehicle creates a conflict with a slower or vulnerable pedestrian.
+
+School-only modification:
+Use a young child, a pupil with a disability or a pupil group requiring a longer
+clearance period. If emergency braking occurs, the vehicle must stop before the
+crossing line and before entering the pupil path.
+
+School pedestrian countermeasure:
+Apply child-sensitive detection, a longer WALK and clearance period, and a
+vehicle hold until the pupil has completely reached the safe footway. Do not
+release conflicting traffic early.
+
+
+17. SCHOOL-ZONE VIOLATION
+Existing case:
+Vehicle disregards an active school-zone rule or control.
+
+School-only modification:
+Retain this case only in the School Crossing scenario. School-zone lines,
+frontage markings, gate controls and school-specific warnings must not appear in
+the Normal Crossing scenario.
+
+School pedestrian countermeasure:
+Activate the school-zone warning state, enforce the configured school operating
+rule, keep pupils at WAIT during any breach and record the event as a
+school-zone-specific violation.
+
+
+18. PARKING-RELATED OBSTRUCTION
+Existing case:
+Parked vehicle blocks visibility or access near the crossing.
+
+School-only modification:
+Place the vehicle near the school gate, drop-off area or zebra crossing so it
+conceals a child from approaching drivers or blocks the pupil waiting area.
+
+School pedestrian countermeasure:
+Detect the occupied keep-clear or visibility zone, display SCHOOL CROSSING VIEW
+OBSTRUCTED and withhold WALK until the sight line and pupil route are clear.
+
+
+19. COLLISION EVENT
+Existing case:
+Vehicle collides with a road user or crossing infrastructure.
+
+School-only modification:
+For a pupil collision, both the pupil and vehicle must move to the zebra-crossing
+conflict point before the alarm and red impact marker appear. For an
+infrastructure collision, Vehicle A follows the defined path and contacts the
+traffic-light pole before the impact indication appears.
+
+School pedestrian countermeasure:
+Immediately set all vehicle and pupil signals to STOP, sound the emergency
+alarm, prevent further actor movement, identify the impact location and begin
+the simulated school emergency-response sequence. The impact marker must never
+appear before contact.
+
+
+20. VEHICLE FIRE EVENT
+Existing case:
+Vehicle develops smoke, fire or an explosion near the crossing.
+
+School-only modification:
+Locate the event near the school frontage while pupils remain within a safe
+waiting or evacuation area. Treat this as an emergency outcome, not an ordinary
+moving violation.
+
+School pedestrian countermeasure:
+Set all crossing indications to STOP, prevent pupils from approaching the
+affected vehicle, display a clear FIRE / EVACUATION alert and begin the simulated
+emergency notification and safe-area sequence.
+
+
+RECOMMENDED IMPLEMENTATION APPROACH
+-----------------------------------
+1. Keep the current 20 identifiers and selection order so existing controls and
+   references remain familiar.
+2. Keep the Normal Crossing definitions and motion profiles unchanged.
+3. Add a School-specific configuration layer for:
+   - pupil or pupil-group actors;
+   - school-gate, drop-off and school-zone context;
+   - school-only warning messages;
+   - longer child clearance timing where required;
+   - vehicle-stop confirmation before WALK;
+   - collision and emergency response wording.
+4. Reuse common motion only where it remains technically appropriate, but apply
+   the school-specific trigger, stopping rule and pedestrian countermeasure.
+5. Validate every School case against these safety invariants:
+   - no pupil enters during WAIT or STOP;
+   - no WALK while a conflicting vehicle is moving;
+   - both conflicting vehicles stop when both affect the pupil movement;
+   - impact alerts occur only after simulated contact;
+   - School-zone graphics never appear in Normal Crossing;
+   - every completed vehicle stop reports zero speed.
+
+DECISION SUMMARY
+----------------
+Recommended decision: retain the existing Normal Crossing catalogue and apply
+the above limited modifications only to the School Crossing version of the same
+20 cases. This provides a clear school-pedestrian safety distinction without a
+complete replacement of both scenario catalogues.

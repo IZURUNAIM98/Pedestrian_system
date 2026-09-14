@@ -1,0 +1,202 @@
+{
+  "app": "context-editor",
+  "version": 1,
+  "exportedAt": "2026-08-19T11:18:26.431Z",
+  "state": {
+    "idea": {
+      "projectName": "Lintas AI Link 2 – Seven-Stage Event Timeline Upgrade",
+      "pitch": "An enhanced smart-crossing simulator that visualises every incident through a seven-stage, timestamped timeline while preserving Link 2’s existing safety, reporting, and simulation features.",
+      "problem": "Link 2 currently records simulation events but does not provide the clear seven-stage visual progression available in Link 4. Users need a traceable view of how each scenario moves through Approach, Initiation, Detected, Escalation, Conflict, Response, and Outcome. The simulator also needs better proportional use of desktop screen space without weakening existing event logs, incident workflows, safety rules, accessibility, or mobile responsiveness.",
+      "targetUsers": "MPAJ traffic operators, smart-city planners, road-safety officers, emergency-response coordinators, system testers, project stakeholders, researchers, and authorised public demonstration users.",
+      "successCriteria": "The MVP is successful when every completed simulation produces seven correctly ordered, timestamped timeline stages and displays 100% completion; the original event log and all incident, emergency, reporting, filtering, and crossing functions remain operational; the desktop simulator uses available width proportionally; mobile screens display without page overflow; the timeline rail supports keyboard navigation; type checking, linting, production builds, contract tests, and focused desktop/mobile interaction tests pass for the updated flow; and deployment to the existing Link 2 address occurs only after the project owner’s approval.",
+      "constraints": "Modify Link 2 only\nUse Link 4 only as the timeline reference\nPreserve all existing Link 2 features\nDo not replace or remove the original event log\nMaintain deterministic simulation behaviour\nKeep all operations within simulation-only boundaries\nDo not connect to or control live traffic infrastructure\nDo not automatically contact real emergency services\nDisplay all seven timeline stages in the required order\nGenerate a timestamp for every timeline stage\nShow 100% completion only after all seven stages finish\nPreserve existing incident and emergency workflows\nPreserve existing reporting, filtering, and crossing features\nMaintain all current safety rules and invariants\nUse available desktop width proportionally\nPrevent horizontal page overflow on narrow screens\nMaintain responsive mobile behaviour\nMake the mobile timeline keyboard accessible\nUse AIM methodology and Bloom’s taxonomy\nRun automated validation on the changed simulator flow\nSeparate new issues from pre-existing test behaviour\nDo not publish without the project owner’s approval\nDeploy only to the existing Link 2 address\n",
+      "projectType": "full-application",
+      "typeDetails": {
+        "kind": "full-application"
+      }
+    },
+    "features": {
+      "mvpFeatures": [
+        {
+          "name": "Smart Pedestrian and Vehicle Detection",
+          "description": "The simulator detects pedestrians, vehicles, motorcycles, and traffic violations at normal and school crossings."
+        },
+        {
+          "name": "Intelligent Traffic-Light Response",
+          "description": "The traffic signal changes according to pedestrian demand, vehicle movement, crossing status, and detected risks."
+        },
+        {
+          "name": "Incident Timeline and Emergency Alerts",
+          "description": "The system records Approach, Initiation, Detected, Escalation, Conflict, Response, and Outcome stages and alerts MPAJ or first responders during life-threatening incidents."
+        }
+      ],
+      "outOfScope": "Live deployment of physical traffic lights and roadside sensors\nAutomatic connection to MPAJ, police, hospital, and fire-rescue systems\nReal-time CCTV, LiDAR, radar, or IoT hardware integration\nAutomatic cloud API integration\nAI-based recommendation engine\nAutomatic traffic-law enforcement or issuing summonses\nFour-way junction crossing scenarios\nPredictive accident forecasting\nPublic user accounts and personal data collection",
+      "knownRisks": "Simulation results may not represent real-world traffic conditions - validate with field data before operational use.\nCamera or sensor data may produce false detections - include manual review and confidence thresholds.\nTraffic violations may be classified incorrectly - label results as simulation outputs only.\nEmergency alerts may be delayed or inaccurate - require human confirmation before dispatch.\nHeavy rain, poor lighting, and occlusion may reduce detection accuracy - test adverse conditions separately.\nSystem performance may decrease with many simultaneous vehicles and pedestrians - apply load testing and monitoring.\nThe prototype is not connected to live MPAJ infrastructure - clearly display simulation-only boundaries.\nLocation and traffic data may be incomplete or outdated - identify data sources and update dates.\nIncorrect signal logic could create safety risks - conduct safety review before any real-world deployment."
+    },
+    "dataModel": {
+      "entities": [
+        {
+          "name": "Crossing",
+          "description": "A normal or school pedestrian crossing in Ampang Jaya monitored by the smart traffic simulator.",
+          "fields": [
+            {
+              "name": "crossing_id",
+              "type": "text",
+              "required": true,
+              "notes": "Unique crossing identifier"
+            }
+          ]
+        }
+      ],
+      "relationships": "Crossing has many Detection Event\nCrossing has many Traffic Violation\nCrossing has many Incident\nCrossing has one Traffic Signal\nSimulation Session has many Crossing\nIncident belongs to one Crossing",
+      "notes": "This is a simulation-only data model for normal and school pedestrian crossings in Ampang Jaya. Exclude four-way junction scenarios. Do not connect automatically to live MPAJ infrastructure, emergency services, CCTV, or physical traffic lights. "
+    },
+    "stack": {
+      "selected": [
+        {
+          "techId": "nextjs",
+          "label": "Next.js App Router + TypeScript",
+          "config": ""
+        },
+        {
+          "techId": "tailwind",
+          "label": "Tailwind CSS",
+          "config": ""
+        },
+        {
+          "techId": "shadcn",
+          "label": "shadcn/ui",
+          "config": ""
+        },
+        {
+          "techId": "node-express",
+          "label": "Node.js + Express",
+          "config": ""
+        },
+        {
+          "techId": "postgres",
+          "label": "PostgreSQL",
+          "config": ""
+        },
+        {
+          "techId": "prisma",
+          "label": "Prisma",
+          "config": ""
+        },
+        {
+          "techId": "no-auth",
+          "label": "No auth (for MVP)",
+          "config": ""
+        },
+        {
+          "techId": "zod",
+          "label": "Zod",
+          "config": ""
+        },
+        {
+          "techId": "vitest",
+          "label": "Vitest",
+          "config": ""
+        },
+        {
+          "techId": "playwright",
+          "label": "Playwright",
+          "config": ""
+        },
+        {
+          "techId": "vercel",
+          "label": "Vercel",
+          "config": ""
+        },
+        {
+          "techId": "node-script",
+          "label": "Node.js script",
+          "config": ""
+        },
+        {
+          "techId": "github-actions",
+          "label": "GitHub Actions",
+          "config": ""
+        },
+        {
+          "techId": "serverless",
+          "label": "Serverless function",
+          "config": ""
+        }
+      ],
+      "otherLibraries": [
+        {
+          "name": "",
+          "notes": "Recharts — Dashboard charts for pedestrian counts, vehicle counts, violations, incidents, and safety KPIs.",
+          "checked": true
+        },
+        {
+          "name": "",
+          "notes": "Lucide React — Accessible icons for traffic signals, pedestrians, vehicles, alerts, and dashboard controls.",
+          "checked": true
+        },
+        {
+          "name": "",
+          "notes": "date-fns — Date and time formatting for event timestamps and incident timelines.",
+          "checked": true
+        },
+        {
+          "name": "",
+          "notes": "Framer Motion — Lightweight animations for the simulator, moving vehicles, alerts, and timeline stages.",
+          "checked": true
+        }
+      ],
+      "rejectedLibraries": [],
+      "configVariables": [
+        {
+          "name": "NEXT_PUBLIC_APP_NAME",
+          "required": true,
+          "source": "Application configuration",
+          "defaultValue": "Lintas AI Ampang Jaya",
+          "visibility": "internal",
+          "usedBy": "Frontend header, browser title, dashboard branding",
+          "notes": "Public application name; contains no secret information."
+        }
+      ],
+      "configNotes": "Use TypeScript, Next.js, React, Tailwind CSS, and responsive desktop/mobile layouts. The MVP must run in simulation-only mode using local mock data. Do not require live CCTV, IoT sensors, cloud APIs, MPAJ systems, emergency services, or physical traffic lights. Keep secrets in environment variables and never expose them in frontend code. Use PostgreSQL and Prisma only when persistent storage is required. Deploy the prototype to Vercel after local testing and safety validation."
+    },
+    "look": {
+      "brandAdjectives": "safe, precise, calm, trustworthy, accessible, operational, responsive",
+      "primary": "#0B5CAD",
+      "background": "#F4F7FA",
+      "surface": "#FFFFFF",
+      "text": "#172033",
+      "success": "#16803C",
+      "error": "#C62828",
+      "displayFont": "Inter",
+      "bodyFont": "Inter",
+      "monoFont": "JetBrains Mono",
+      "colorMode": "Light",
+      "designNotes": "Use a production-ready municipal safety dashboard with a high-contrast Safety Blue and Neutral Light colour system. Use blue for primary navigation and trusted system actions; green for safe or resolved states; amber for warnings; red only for critical incidents and emergency alerts. Use white surfaces, soft blue-grey backgrounds, clear borders, readable typography, generous spacing, accessible contrast, responsive layouts, and restrained animation. Preserve clear visual separation between simulation data, detected violations, incident escalation, emergency alerts, and normal traffic-signal states. Do not use red or green as the only way to communicate status; include labels and icons."
+    },
+    "contextTools": {
+      "docIngestion": false,
+      "docIngestionTool": "markitdown",
+      "docIngestionCustom": "",
+      "codebaseGraph": true,
+      "codebaseGraphTool": "auto",
+      "codebaseGraphCustom": "",
+      "mermaidValidation": true,
+      "markdownLinting": true,
+      "lintTool": "markdownlint",
+      "lintCustom": "",
+      "tokenBudget": true,
+      "compactInstructions": true
+    },
+    "agent": {
+      "role": "Senior full-stack smart-city safety product engineer",
+      "principles": "Plan before coding and preserve all existing functionality. Build the simulation-only MVP first using local mock data. Prioritise normal pedestrian crossings and school crossings in Ampang Jaya; exclude four-way junction scenarios. Use strongly typed TypeScript, reusable accessible components, responsive layouts, validated data models, and clear separation between detection, traffic-signal response, violations, incidents, alerts, and timeline stages. Do not connect to live MPAJ infrastructure, CCTV, IoT sensors, emergency services, or physical traffic lights. Treat AI outputs as simulated results, display confidence and safety disclaimers, and verify each feature before continuing. Keep the interface calm, trustworthy, readable, and suitable for future production use.",
+      "verificationCommands": "npm run lint\nnpm run typecheck\nnpm run test\nnpm run build\nnpx playwright test",
+      "definitionOfDone": "The Lintas AI Ampang Jaya simulator runs locally without errors and delivers the complete MVP. It supports normal and school crossing scenarios, moving vehicles and pedestrians, traffic-violation simulation, intelligent signal responses, incident alerts, and the seven-stage event timeline: Approach, Initiation, Detected, Escalation, Conflict, Response, and Outcome. All pages are responsive, accessible, readable, and consistent with the approved design system. Simulation-only boundaries and safety disclaimers are visible. Code passes linting, type checking, unit tests, browser tests, and the production build."
+    },
+    "mermaid": {
+      "code": "flowchart TD\n    A[\"Link 2 Simulator\"] --> B[\"Approach\"]\n    B --> C[\"Initiation\"]\n    C --> D[\"Detected\"]\n    D --> E[\"Escalation\"]\n    E --> F[\"Conflict\"]\n    F --> G[\"Response\"]\n    G --> H[\"Outcome\"]\n\n    H --> I{\"Simulation completed?\"}\n    I -- \"Yes: 100%\" --> J[\"Timestamped seven-stage timeline\"]\n    I -- \"No\" --> K[\"Show current progress and status\"]\n\n    J --> L[\"Original event log remains available\"]\n    K --> L\n\n    L --> M[\"Incident workflow preserved\"]\n    M --> N[\"Emergency and reporting features preserved\"]\n    N --> O[\"Filtering and crossing features preserved\"]\n\n    P[\"Simulation-only boundary\"] -.-> A\n    Q[\"No live traffic control\"] -.-> A\n    R[\"No automatic emergency dispatch\"] -.-> A\n\n    O --> S[\"Responsive simulator layout\"]\n    S --> T[\"Wider proportional desktop view\"]\n    T --> U[\"Mobile layout without horizontal overflow\"]\n    U --> V[\"Keyboard-accessible timeline rail\"]\n\n    V --> W[\"Type check\"]\n    W --> X[\"Lint\"]\n    X --> Y[\"Production build\"]\n    Y --> Z[\"Contract and interaction tests\"]\n    Z --> AA{\"Project owner approval?\"}\n    AA -- \"Approved\" --> AB[\"Publish to existing Link 2 address\"]\n    AA -- \"Not approved\" --> AC[\"Hold deployment\"]"
+    }
+  },
+  "overrides": {}
+}

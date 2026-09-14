@@ -1,0 +1,24 @@
+node_modules/
+.next/
+.tools/
+playwright-report/
+test-results/
+tmp/
+.docx-work/
+output/
+browser-check-*.png
+debug.log
+dev-server.log
+dev-server-error.log
+browser-check-mobile.png
+browser-check-access-mobile.png
+*.tsbuildinfo
+.env*
+!.env.example
+
+# SmartCross Phase 2 belongs in the separate SmartCity repository.
+app/phase-2/
+components/phase-two-*.tsx
+components/phase-two-*.css
+tests/e2e/phase-two.spec.ts
+scripts/phase-two-visual-check.mjs

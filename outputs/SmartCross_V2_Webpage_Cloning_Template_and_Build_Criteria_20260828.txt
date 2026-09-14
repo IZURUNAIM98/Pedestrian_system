@@ -1,0 +1,951 @@
+SMARTCROSS V2 WEBPAGE CLONING TEMPLATE AND BUILD CRITERIA
+Version: 1.0
+Prepared: 28 August 2026 (Malaysia time)
+Reference production webpage: https://smartcross-v2-pedestrian-simulator.vercel.app/
+Reference product name: SmartCross V2
+
+======================================================================
+1. PURPOSE OF THIS TEMPLATE
+======================================================================
+
+Use this document to build another webpage that reproduces the structure,
+appearance, behaviour, safety logic, responsive layout, and verification
+quality of SmartCross V2 as closely as practical.
+
+This is a functional replication specification, not permission to copy private
+credentials, deployment tokens, protected data, trademarks, or third-party
+assets. Replace organisation names and deployment identifiers when the cloned
+webpage belongs to a different owner.
+
+The clone must remain an educational, deterministic simulation unless a new
+project has separately implemented, authorised, tested, and documented real
+hardware or external integrations. Do not describe mock CCTV, plate data,
+notifications, signals, or incident records as live operational services.
+
+======================================================================
+2. AIM METHOD
+======================================================================
+
+ACTOR
+- Primary: authorised municipal operators, safety planners, reviewers, testers,
+  demonstration users, and project stakeholders.
+- Secondary: accessibility reviewers, crossing engineers, school safety teams,
+  and developers maintaining the simulator.
+- System actors: two conflicting vehicles, one pedestrian or a compact student
+  group, paired signals, a deterministic controller, simulated sensors, and a
+  simulated CCTV camera.
+
+INPUT
+- Authenticated demonstration session.
+- Crossing mode: Normal or School.
+- One selectable crossing condition.
+- Deterministic seven-frame motion profile.
+- Local timestamps, signal states, route-clear state, sensor state, risk state,
+  scenario severity, and simulated confidence.
+
+MISSION
+- Make every approach, detection, conflict, response, and outcome visible.
+- Enforce STOP before WALK.
+- Preserve an understandable local event history.
+- Demonstrate CCTV plate capture for violations without using a live camera,
+  vehicle database, enforcement service, or personal identification.
+- Keep critical-event acknowledgement and resolution inside the local mock
+  workflow.
+
+======================================================================
+3. BLOOM TAXONOMY EXECUTION MODEL
+======================================================================
+
+REMEMBER
+- Display the simulation-only boundary and the STOP-before-WALK rule.
+- Show the seven stage names and the Normal/School condition counts.
+
+UNDERSTAND
+- Explain the selected condition, detection basis, risk, active sensor, current
+  controller state, and why WALK is released or withheld.
+
+APPLY
+- Let the user select a mode and condition, then run the deterministic sequence.
+
+ANALYSE
+- Synchronise actor motion, signal state, countdown, timeline stage, effect
+  overlay, CCTV capture, and event-log entry.
+
+EVALUATE
+- Let authorised users review simulated incidents, acknowledge mock alerts,
+  confirm a local record, or mark a false positive.
+
+CREATE
+- Generate an offline PDF summary from the same browser-session history.
+
+======================================================================
+4. NON-NEGOTIABLE SAFETY AND EVIDENCE BOUNDARIES
+======================================================================
+
+4.1 Core signal invariant
+- Pedestrian WALK may appear only when both conflicting vehicle approaches are
+  STOP and the protected route is verified clear.
+- Reject any state in which pedestrian WALK and conflicting vehicle GO occur at
+  the same time.
+- When input is stale, obstructed, uncertain, or conflicting, keep pedestrians
+  at WAIT/HOLD and send the simulated record to human review.
+
+4.2 Simulation-only requirements
+- Use local deterministic mock data.
+- No live CCTV feed.
+- No automatic number-plate recognition database lookup.
+- No physical traffic-light control.
+- No enforcement connection.
+- No emergency-service dispatch.
+- No personal identification.
+- No external notification may leave prototype mode.
+- Show these boundaries on the access page, main application, evidence panel,
+  critical workflow, PDF report, and footer.
+
+4.3 Evidence requirements
+- Plate numbers must be synthetic and deterministically generated.
+- Confidence must be labelled mock or simulated.
+- Violation outcomes require authorised human review.
+- Possible distraction must remain suspected or unverified, never confirmed by
+  the simulator alone.
+- Browser-memory records must not be presented as evidence of a real offence.
+
+======================================================================
+5. RECOMMENDED TECHNICAL BASELINE
+======================================================================
+
+Framework and language
+- Next.js App Router 16.3.1 or a carefully tested compatible version.
+- React 19.2.8.
+- TypeScript 5.9 or newer compatible release.
+- Zod for input validation.
+- Server Components for route protection and page composition where suitable.
+- Client Components for animation, controls, local history, and downloads.
+
+Testing and tooling
+- ESLint.
+- TypeScript no-emit type checking.
+- Vitest for unit and contract tests.
+- Playwright for desktop and mobile end-to-end tests.
+- UTF-8 and English-text validation before every production build.
+
+Suggested scripts
+- npm run dev
+- npm run validate:text
+- npm run lint
+- npm run typecheck
+- npm run test
+- npm run build
+- npm run test:e2e
+
+No database is required for the reference clone. Session history, incident
+review, log filtering, counters, and mock workflow state are held locally in the
+active browser session.
+
+======================================================================
+6. ROUTES AND AUTHENTICATION
+======================================================================
+
+Required routes
+- GET /                  Protected simulator application.
+- GET /access            Demonstration sign-in page.
+- POST /api/login        Validate demonstration credentials and set session.
+- POST /api/logout       Clear session and return to /access.
+- POST /api/simulate     Authenticated deterministic simulation endpoint.
+- Framework not-found and error surfaces.
+
+Authentication behaviour
+- Anonymous access to / redirects to /access.
+- An already authenticated user visiting /access redirects to /.
+- Login accepts an operator ID and password.
+- Use one generic error message for incorrect credentials; do not reveal which
+  field failed.
+- Validate input lengths and types server-side.
+- Store only a signed HTTP-only session cookie.
+- Cookie requirements: SameSite=Lax, Secure in production, path=/, eight-hour
+  maximum age or a newly approved equivalent.
+- Production credentials must come from protected environment variables.
+- Never include passwords, authentication hashes, salts, deployment tokens, or
+  session secrets in this cloning template or client-side code.
+- Label the sign-in as a demonstration gate, not production identity security.
+
+Access-page layout
+- Full viewport split layout on wide screens.
+- Left panel: V2 mark, SmartCross V2 name, eyebrow, sign-in heading, explanatory
+  copy, ID field, password field, helper text, primary button, boundary notice.
+- Right panel: dark smart-city illustration, connected-node motif, headline,
+  explanatory paragraph, and five capability bullets.
+- Stack to one column below tablet width.
+
+======================================================================
+7. INFORMATION ARCHITECTURE
+======================================================================
+
+Persistent application shell
+1. Skip-to-main-content link.
+2. Top bar with AJ monogram, SmartCross V2 brand, Simulation only chip, Log out.
+3. Horizontally scrollable primary navigation.
+4. View-specific page heading, description, and severity badge.
+5. Persistent educational-prototype notice.
+6. Active view content.
+7. Footer with build name and STOP-before-WALK safety rule.
+
+Primary navigation and page intent
+1. SIMPSON workflow
+   - Status hero, vehicle/pedestrian signal summary, session metrics, and the
+     four-step Approach/Detect/Protect/Record explanation.
+2. Simulator
+   - Main animated crossing workspace and all controls, history, and workflows.
+3. Technology
+   - Three conceptual tiers and fail-safe behaviour.
+4. Scenarios
+   - Normal and School context cards plus both condition matrices.
+5. Accessibility
+   - Visible states, pedestrian distinction, keyboard use, and readable scale.
+6. Incidents
+   - Local human confirmation or dismissal of simulated incident records.
+7. Reports
+   - Session table and downloadable PDF report.
+
+Technology tiers
+1. Field sensing and CCTV nodes.
+2. Crossing safety controller.
+3. Authorised review layer.
+
+======================================================================
+8. VISUAL DESIGN SYSTEM
+======================================================================
+
+Overall character
+- Civic, calm, technical, evidence-led, and readable.
+- Use strong dark teal navigation and simulator framing.
+- Use warm off-white page backgrounds and white content surfaces.
+- Use green for safe/complete states, amber for caution, and red for critical or
+  blocked states. Never rely on colour alone; always include text labels.
+
+Core palette targets
+- Main dark teal: approximately #062E3A to #082E39.
+- Deep text: approximately #102F37 to #17373D.
+- Page background: approximately #F5F4EE.
+- White surface: #FFFFFF.
+- Green accent: approximately #3DD48D to #43D99A.
+- Cyan accent: approximately #38D5DF to #58BFE6.
+- Amber accent: approximately #E7B32F to #F5BD3D.
+- Critical red: approximately #A9151D to #D32631.
+- Muted text: approximately #5D697B to #68787B.
+- Light border: approximately #D6DFDB.
+
+Typography
+- Primary: Inter, Segoe UI, Arial, sans-serif fallback.
+- Technical labels and timestamps: Consolas or a legible monospace fallback.
+- Headings: medium weight, compact line height, modest negative tracking.
+- Eyebrows: small uppercase, bold, widely tracked.
+- Body text: plain English, readable line length, restrained size variation.
+
+Surface and component style
+- Main simulator board uses square/low-radius technical framing.
+- General cards use subtle borders, 12-16 px radius, and very light shadow.
+- Status badges use rounded pills and severity-specific colours.
+- Buttons are at least 44 px high.
+- Focus indicators are visible, high contrast, and offset from controls.
+- Use text, icon shape, border, and colour together for each safety state.
+
+Wide-layout dimensions
+- Application content maximum width: about 1544-1660 px.
+- Simulator stage: crossing workspace roughly 3 parts; control panel roughly 1
+  part, with a practical minimum control width near 310 px.
+- Normal road scene minimum height: about 470 px in the refined layout.
+- School road scene minimum height: about 470 px with taller top pavement.
+- Marked crossing width: about 112 px.
+- Place stop lines symmetrically on both sides of the zebra.
+
+======================================================================
+9. RESPONSIVE BEHAVIOUR
+======================================================================
+
+Required supported range
+- Minimum viewport width: 320 px.
+- Explicitly verify at 360 px mobile, modern mobile, tablet, desktop, and wide
+  desktop sizes.
+
+Breakpoint behaviour
+- Near 1080 px: collapse the simulator workspace and control panel into one
+  column; remove the control panel's left border and use a top border.
+- Near 920 px: collapse the access page from two columns to one.
+- Near 700 px: stack mode controls, simplify multi-column reference sections,
+  use two-column counters, reduce engineering labels, and preserve readable
+  crossing geometry.
+- Near 430 px: reduce large headings and card padding where necessary.
+- Navigation may scroll horizontally; the document body must not create
+  unintended horizontal overflow.
+- Tables and the seven-stage rail may scroll inside their own containers.
+- Preserve the visible pedestrian/student group, traffic lights, vehicle status,
+  and critical signage on narrow screens.
+
+Reduced motion
+- Honour prefers-reduced-motion.
+- Reduce movement transition durations to effectively immediate.
+- Disable fire, alarm, and critical-marker pulsing animation.
+- Keep every state understandable when animation is disabled.
+
+======================================================================
+10. SIMULATOR PAGE LAYOUT
+======================================================================
+
+Order of simulator content
+1. Dark Simulation only release bar.
+2. Intro section with title and condition-count explanation.
+3. Two large crossing-mode tabs.
+4. Main stage with crossing workspace and control panel.
+5. CCTV evidence panel.
+6. Eight local simulation counters.
+7. Seven-stage timeline card and completion bar.
+8. Mock notification workflow.
+9. Original violation-history event log.
+
+Mode tabs
+- Normal tab code: ZBR.
+- Normal label: Normal zebra crossing.
+- Normal context: mid-block road and public footpath.
+- School tab code: SKL.
+- School label: School crossing.
+- School context: school forecourt and supervised courtyard.
+- Switching mode resets the unstarted preview to that mode's no-violation case.
+
+Control panel
+- Current phase.
+- Real-time controller countdown.
+- Mock confidence percentage.
+- Active sensor, risk, and pedestrian WAIT/HOLD or protected WALK summary.
+- AIM METHOD heading.
+- Condition dropdown and condition summary.
+- Simulated input/detection preview.
+- Run seven-stage simulation button.
+- Replay deterministic sequence for non-critical completed cases.
+- Critical cases require Reset simulation before replay.
+- Reset preserves historical records.
+- Pedestrian-sequence safety explanation.
+- Local-record-only helper text.
+
+======================================================================
+11. CROSSING SCENE ANATOMY
+======================================================================
+
+Common to both modes
+- Simulation-data top strip and context label.
+- Representative-location strip and controller state.
+- CCTV V2-01 indicator at the scene edge.
+- Two-way road with opposing lane direction labels.
+- Top and bottom pavement.
+- Central marked zebra crossing.
+- Stop Line A and Stop Line B.
+- Vehicle A and Vehicle B.
+- Vehicle label, speed in km/h, motion state, and distance to centre.
+- Two bilateral traffic lights.
+- Paired pedestrian WAIT/WALK timers driven by the same controller clock.
+- Approach and opposing radar graphics.
+- Four retained engineering zones: two speed-measurement zones, conflict zone,
+  and parking-review zone.
+- Scenario-specific tracked path or overlay.
+- Violation marker for violation cases.
+- Stage caption with stage number and current action.
+- Simulated plate-capture badge from the Detected stage onward.
+
+Normal-only scene
+- Public mid-block streetscape.
+- One high-contrast pedestrian actor.
+- Public footpath and tactile waiting context.
+
+School-only scene
+- Taller school-side pavement.
+- School building label, school gate, and supervised courtyard.
+- Compact group of seven visible student icons treated as one logical actor.
+- School-specific detection copy and motion refinements.
+- School-zone boundary only for condition 17.
+
+Vehicle visual states
+- WAITING/STOPPED/YIELDING: green.
+- APPROACHING/CLEARED: blue.
+- ACCELERATING/TURNING: amber.
+- BRAKING/WRONG_WAY/BLOCKING: red.
+- COLLISION/FIRE: dark critical red with strong outline/glow.
+- Road-user shapes must distinguish car, motorcycle, van, and bus where used.
+
+Critical fire signage
+- FIRE / SMOKE and STOP are separate signs in one vertical stack.
+- Maintain a fixed gap; the signs must not overlap one another or the vehicle
+  information body.
+- Keep the stack upright when vehicle heading changes.
+- Show a local mock exclusion zone.
+- Freeze both vehicles at STOP and keep pedestrian HOLD/WAIT.
+
+Collision staging
+- Show the vehicle path before the collision.
+- Show physical simulated contact before the impact marker or alarm.
+- After contact, freeze actors, display the impact marker, set STOP/HOLD, and
+  activate the critical workflow.
+
+======================================================================
+12. CONDITION CATALOGUE
+======================================================================
+
+Counting rule
+- Normal: 20 selectable conditions = 1 no-violation baseline + 19 violations.
+- School: 21 selectable conditions = 1 no-violation baseline + 20 violations.
+- Condition 17, exceeded school-zone speed limit, is School-only.
+- Across both modes there are 39 selectable violation profiles: 19 Normal and
+  20 School, plus two mode-specific no-violation baselines.
+
+Safe baseline (first option in each mode)
+- Normal pedestrian crossing: no violation.
+- School pedestrian crossing: no violation.
+- Both opposing vehicles approach, decelerate, stop before their lines, and
+  remain STOP while the pedestrian or students receive WALK.
+- WALK lasts through a verified protected interval; both modes use a 12-second
+  protected WALK in the reference build.
+- Traffic resumes only after the route clears.
+- No CCTV plate is captured for the no-violation condition.
+
+Violation catalogue and required visual effect
+01. Failure to stop or give way
+    Effect: conflict path and STOP/HOLD response.
+02. Crossing-zone speeding
+    Effect: speed-threshold breach; School uses lower context-sensitive threshold.
+03. Red-signal violation
+    Effect: red signal and stop-line breach.
+04. Stopped or parked on the crossing
+    Effect: marked crossing obstruction; actor remains fixed until reset.
+05. Accessible route blocked
+    Effect: accessible-route obstruction and wheelchair/accessible user context.
+06. Motorcycle filtering at the crossing
+    Effect: filtering path through a vehicle queue.
+07. Motorcycle in pedestrian area
+    Normal: motorcycle intrusion into pedestrian area.
+    School: refined as premature pupil movement contained before the zebra.
+08. Overtaking a yielding vehicle
+    Effect: yielding-vehicle overtake path.
+09. Driving in the wrong direction
+    Effect: wrong-direction path.
+10. Opposing-lane queue bypass
+    Effect: opposing-lane bypass and queue.
+11. Unsafe lane change near the crossing
+    Effect: danger-zone lane change.
+12. Possible distracted driving or phone use
+    Effect: observable delayed/distraction path; always unverified.
+13. Tailgating near the stop line
+    Effect: unsafe following-gap marker.
+14. Aggressive acceleration or braking
+    Effect: aggressive speed change; School refinement emphasises emergency braking.
+15. Unsafe U-turn near the crossing
+    Effect: smooth U-turn arc; use longer frame timing where needed.
+16. Failure to yield to a vulnerable pedestrian
+    Effect: vulnerable-user priority route and longer clearance where required.
+17. Exceeded school-zone speed limit
+    School only. Effect: 30 km/h school-zone boundary and detected-speed text.
+18. Parking obstructing sight distance
+    Effect: blocked sight-distance triangle; School ties it to gate/keep-clear area.
+19. Collision with a road user or infrastructure
+    Effect: collision trajectory, contact, impact point, critical alarm.
+20. Vehicle fire, smoke, or explosion
+    Effect: fire indicator, separate FIRE / SMOKE and STOP signs, exclusion zone,
+    frozen critical state, and mock emergency workflow.
+
+Each Normal and School violation must have its own assigned data profile. A
+clone does not pass acceptance if all options merely change labels while using
+one generic vehicle animation.
+
+======================================================================
+13. SEVEN-STAGE MOTION AND CONTROLLER MODEL
+======================================================================
+
+Stage names
+1. Approach
+2. Initiation
+3. Detected
+4. Escalation
+5. Conflict
+6. Response
+7. Outcome
+
+Every stage must record
+- Timeline stage number and name.
+- Vehicle A and B: x position, lane position, heading, speed, state, label, and
+  optional visibility.
+- Pedestrian: progress, state, and type.
+- Vehicle signal: GO, AMBER, or STOP.
+- Pedestrian signal: WAIT or WALK.
+- Controller state.
+- Path tone: blue, amber, red, or green.
+- Scenario effect.
+- Route-clear Boolean.
+- Active sensor.
+- Risk: Normal, Caution, High, or Emergency.
+- Plain-language action.
+- Duration and optional protected-WALK seconds at frame start.
+
+Allowed vehicle states
+- WAITING, APPROACHING, ACCELERATING, BRAKING, STOPPED, YIELDING, TURNING,
+  WRONG_WAY, BLOCKING, COLLISION, FIRE, CLEARED.
+
+Allowed pedestrian states
+- WAITING, WALKING, PAUSED, VULNERABLE_PRIORITY, ROUTED_AWAY, COMPLETED, HOLD.
+
+Controller states
+- DETECTION, VERIFICATION, CAUTION, WALK, HOLD, STOP_ALL, CRITICAL_ALARM,
+  OUTCOME, RESET.
+
+Timing
+- Standard frame duration target: 1000 ms.
+- U-turn frame duration target: 1800 ms where the smooth arc needs more time.
+- Controller display updates approximately every 250 ms but counts real seconds.
+- Both roadside pedestrian timers must show the same shared countdown.
+- Do not create independent timers that can drift.
+
+Motion requirements
+- Actors remain stationary before Run.
+- Movement between frames is continuous and physically understandable.
+- Heading changes must not rotate text labels or safety signs upside down.
+- Stopped actors finish at zero speed.
+- Blocking, collision, and fire scenarios remain frozen until reset where the
+  scenario requires manual clearance.
+- Any violation recovery that permits WALK must first place both vehicles at a
+  red stop line and verify routeClear=true.
+- Critical collision and fire outcomes remain pedestrian WAIT/HOLD.
+
+======================================================================
+14. EFFECT OVERLAYS
+======================================================================
+
+Implement these reusable visual-effect types
+- none: tracked movement.
+- conflict: failure-to-yield conflict path.
+- speed: speed-threshold breach.
+- red-light: red signal and stop-line breach.
+- crossing-blocked: marked crossing obstruction.
+- accessible-blocked: accessible route obstruction.
+- filtering: motorcycle filtering path and queue.
+- pedestrian-intrusion: pedestrian-area intrusion.
+- overtaking: yielding-vehicle overtake path.
+- wrong-way: wrong-direction path.
+- queue-bypass: opposing-lane queue bypass.
+- lane-change: danger-zone lane change.
+- possible-distraction: possible distraction path.
+- tailgating: unsafe following distance.
+- hard-braking: aggressive speed change.
+- u-turn: unsafe turning arc.
+- vulnerable-user: vulnerable-user priority route.
+- school-speed: school-zone speed breach.
+- sight-obstruction: blocked sight-distance triangle.
+- collision: simulated impact zone and collision path.
+- fire: fire and exclusion zone.
+
+Labels and geometry must remain legible and must not cover the key actor, signal,
+or STOP/WALK state they explain.
+
+======================================================================
+15. CCTV AND SYNTHETIC PLATE EVIDENCE
+======================================================================
+
+Applies to both Normal and School violation scenarios.
+
+Required sequence
+- Camera begins in Camera ready state.
+- At stage 3, Detected, camera changes to active capture state.
+- Generate one deterministic synthetic plate from scenario ID and mode.
+- Recommended format: SCV2-N#### for Normal and SCV2-S#### for School.
+- Display the plate in the road scene and the evidence card.
+- Preserve camera ID, capture timestamp, synthetic plate, mock confidence, and
+  SIMULATED_CAPTURE status in the result.
+
+Evidence card fields
+- Camera: CCTV V2-01 or clone-specific mock identifier.
+- Synthetic plate.
+- Mock confidence percentage.
+- Status: Local review only.
+
+No-violation behaviour
+- Camera may remain visibly ready.
+- Do not generate or display a plate capture.
+
+Mandatory boundary copy
+- State that CCTV and plate data are simulated.
+- State that no live camera, database lookup, enforcement, or personal
+  identification is used.
+
+======================================================================
+16. CRITICAL INCIDENT AND MOCK NOTIFICATION WORKFLOW
+======================================================================
+
+Critical conditions
+- Collision.
+- Vehicle fire, smoke, or explosion.
+
+Critical response
+- Both vehicles STOP.
+- Pedestrian HOLD/WAIT.
+- Display Critical incident banner.
+- Play three short local alarm tones once per session if audio is supported.
+- Do not replay the alarm repeatedly during React re-rendering.
+- Require Reset simulation before replay.
+- Queue only fictional local notifications.
+
+Fictional recipient list
+- Municipal control centre: fictional test recipient.
+- Police: mock queue only.
+- Fire and rescue: mock queue only.
+- Emergency medical/public hospital liaison: mock queue only.
+
+Workflow steps
+1. Detected.
+2. Verification required.
+3. Preliminary alert issued.
+4. Mock notification recorded.
+5. Acknowledged.
+6. Incident resolved.
+
+User actions
+- Acknowledge mock alert.
+- Resolve mock workflow.
+- Confirm for local record.
+- Mark false positive.
+
+These actions update only local state. They must never send a message or contact
+an external recipient.
+
+======================================================================
+17. HISTORY, COUNTERS, LOGS, AND REPORTS
+======================================================================
+
+Session history
+- Keep the newest session first.
+- Reference maximum: 12 browser-session results.
+- Preserve history when a sequence is reset.
+- History resets naturally when browser state is lost unless persistence is
+  separately designed and disclosed.
+
+Eight simulator counters
+1. Total violations.
+2. Failure to yield.
+3. Speed violations.
+4. Crossing obstructions.
+5. Motorcycle violations.
+6. Critical incidents.
+7. Normal crossing.
+8. School crossing.
+
+Event log
+- One stage-aligned entry per frame: seven entries per completed simulation.
+- Categories: sensor, detection, controller, safety, outcome.
+- Include timestamp, stage, actor states/speeds, pedestrian state, sensor, risk,
+  controller, signals, synthetic plate capture at Detected, and final boundary.
+- Reveal entries progressively while the animation is running.
+- Filters: All events, Sensor, Detection, Controller, Safety, Outcome.
+- Clear log hides violation entries from the local view without altering other
+  current-session counters or records.
+
+Reports view
+- Table columns: Session, Scenario, Mode, Confidence, Outcome, Completed (MYT).
+- Download a readable, paginated PDF.
+- Suggested filename: smartcross-v2-simulation-report.pdf.
+- PDF includes generation time, summary counts, session history, detection,
+  simulated CCTV evidence, outcome, and evidence boundary.
+- PDF must not imply real evidence or operational integration.
+
+======================================================================
+18. ACCESSIBILITY ACCEPTANCE CRITERIA
+======================================================================
+
+- Use semantic landmarks: header, nav, main, sections, footer.
+- Provide Skip to main content.
+- Provide visible keyboard focus.
+- Every control is keyboard operable.
+- Use native buttons, selects, labels, and tables where possible.
+- Mode buttons expose pressed state.
+- Active navigation exposes aria-current.
+- Seven-stage rail uses tablist/tab/tabpanel semantics.
+- Timeline keyboard controls: Arrow Left/Right/Up/Down, Home, End.
+- Use a polite live region for simulation, reset, alarm, report, and review
+  announcements.
+- Provide text descriptions for vehicle state, speed, distance, signal state,
+  pedestrian state, CCTV status, and current controller state.
+- Decorative graphics must be hidden from assistive technology.
+- Do not use colour as the only indicator.
+- Maintain readable text and controls at 360 px without page-level overflow.
+- Honour reduced-motion preferences.
+- Keep critical status understandable with sound muted or unavailable.
+
+======================================================================
+19. LANGUAGE, LOCALE, AND ENCODING
+======================================================================
+
+- Default language: English using Malaysian/British conventions.
+- Document language: en-MY.
+- Time zone: Asia/Kuala_Lumpur for displayed timestamps.
+- Save source and content files as UTF-8 without BOM.
+- Normalise text to Unicode NFC.
+- HTML content type: text/html; charset=utf-8.
+- JSON content type: application/json; charset=utf-8.
+- Reject mojibake, replacement glyphs, hidden control characters, and unexpected
+  alphabets unless the project intentionally updates its language policy.
+- Validate imported, database-derived, or AI-generated text at the boundary.
+- Let React escape JSX text. Do not inject untrusted raw HTML.
+- Keep acronyms, actor names, state labels, modes, units, and capitalisation
+  consistent.
+
+======================================================================
+20. DATA CONTRACTS
+======================================================================
+
+Scenario object
+- id
+- label
+- summary
+- supportedModes
+- detection
+- verification
+- systemResponse
+- finalOutcome
+- severity
+- confidence
+- vehicleCount
+- pedestrianCount
+- motorcycleCount
+- violation
+- roadUser
+
+Simulation result
+- sessionId
+- scenario
+- mode
+- completedAt
+- timeline[7]
+- signal response
+- incident Boolean
+- emergencyReviewRequired Boolean
+- CCTV evidence or null
+- eventLog[7]
+
+API validation
+- Accept only mode normal or school.
+- Accept only a scenario ID available to that mode.
+- Return 401 for missing/invalid session.
+- Return 400 for malformed selection input.
+- Return a safe 422 error for other simulation rejection.
+- Never accept client-provided signal output as authoritative; calculate signal,
+  motion, evidence, and log state from server/shared deterministic rules.
+
+======================================================================
+21. RECOMMENDED SOURCE STRUCTURE
+======================================================================
+
+app/
+- layout: metadata, en-MY document shell, global CSS imports.
+- page: protected dashboard route.
+- access/page: sign-in page.
+- api/login, api/logout, api/simulate.
+- globals.css: base components, access layout, core responsiveness.
+- enhancements.css: refined simulator, motion, effects, CCTV, critical workflow.
+
+components/
+- dashboard: navigation, state orchestration, simulator composition, page views.
+- crossing-view: road scene, actors, signals, effects, CCTV scene indicator.
+- timeline-rail: accessible seven-stage tabs.
+- event-log: progressive category-filtered history.
+- access-form: login interaction.
+- ui/badge, ui/button, ui/card: reusable primitives.
+
+lib/
+- types: domain contracts.
+- motion: all deterministic seven-frame profiles and timing.
+- simulation: scenario catalogue, results, timeline, event log, CCTV evidence.
+- demo-auth: server-side credential/session helpers.
+- pdf-report: offline report generator.
+- text-standard: English, UTF-8, normalisation, and escaping rules.
+- utils: formatting helpers.
+
+tests/
+- authentication tests.
+- simulation and safety-contract tests.
+- text-standard tests.
+- desktop/mobile Playwright tests.
+
+scripts/
+- text validator.
+- clean deployment-bundle builder.
+- optional browser smoke-check script maintained against the current UI labels.
+
+======================================================================
+22. BUILD SEQUENCE FOR A CLONE
+======================================================================
+
+Phase 1 - Remember and understand
+1. Confirm the new owner, product name, representative location, and whether the
+   project remains simulation-only.
+2. Inventory the required Normal and School conditions.
+3. Confirm which brand terms may be reused and which must be replaced.
+4. Freeze the safety invariant and evidence boundary before styling.
+
+Phase 2 - Apply
+5. Create the App Router structure and shared UI primitives.
+6. Implement the access gate and protected API routes.
+7. Implement typed scenario, motion, timeline, signal, CCTV, and event models.
+8. Build the application shell and seven page views.
+9. Build the Normal crossing scene first, including safe baseline.
+10. Add the School layout only where context requires it: taller frontage,
+    school/courtyard, student group, lower speed context, and condition 17.
+
+Phase 3 - Analyse
+11. Implement each violation as a distinct seven-frame motion sequence.
+12. Synchronise signals, timers, timeline, overlays, logs, and CCTV capture to the
+    same frame/controller clock.
+13. Check all STOP/WAIT/WALK and route-clear combinations.
+14. Check that all signage is spatially separated at desktop and mobile widths.
+
+Phase 4 - Evaluate
+15. Run unit and contract tests for all profiles and invariants.
+16. Run desktop/mobile browser tests for all selectable cases.
+17. Visually inspect Normal baseline, School baseline, accessible obstruction,
+    school condition 17, collision, and fire at minimum.
+18. Check console errors, page overflow, keyboard use, reduced motion, titles,
+    encoding, and report download.
+
+Phase 5 - Create
+19. Build the production artifact.
+20. Deploy only after explicit owner approval.
+21. Verify the immutable deployment and production alias separately.
+22. Record deployment ID, READY state, HTTP 200, title, runtime errors, and any
+    authentication/protection limitations.
+
+======================================================================
+23. REQUIRED TEST MATRIX
+======================================================================
+
+Unit and contract tests
+- Correct scenario counts and mode availability.
+- Input schema rejects mismatched mode/scenario combinations.
+- Every scenario returns exactly seven ordered timeline stages.
+- Every motion profile has seven valid frames.
+- No WALK with conflicting vehicle movement.
+- Recoverable WALK uses STOP and routeClear=true.
+- Critical outcomes use STOP and WAIT/HOLD.
+- School condition 17 is absent from Normal and present in School.
+- CCTV evidence exists for all violations and not for safe baselines.
+- Synthetic plate is deterministic and mode-distinguishable.
+- Authentication token expiry and signature checks.
+- UTF-8/text validation.
+
+End-to-end tests on desktop and mobile
+- Correct English copy on all views.
+- Correct UTF-8, title, lang, and responsive layout.
+- Complete Normal and School safe baselines.
+- Keyboard-operable timeline without body overflow.
+- Accessible-route obstruction holds wheelchair user and keeps route blocked.
+- Fire: exclusion zone, FIRE / SMOKE and STOP do not overlap, frozen STOP/HOLD.
+- School condition 17 boundary appears only in School.
+- Collision: path, contact, impact marker, then alarm.
+- Engineering zones, paired signals, and foreground pedestrian remain visible.
+- One Normal pedestrian and compact School student group.
+- School condition 07 pupil stops before zebra during WAIT.
+- Timeline, caption, controller, and event log remain frame-synchronised.
+- Vehicles remain stopped until pedestrian clears, then release sequentially.
+- Paired pedestrian timers share one real countdown.
+- Reset preserves history and permits deterministic replay.
+- Mock notification never contacts an external service.
+- Exercise all 39 selectable violation profiles.
+- All violation recoveries that show WALK first stop both vehicles at RED.
+- CCTV plate evidence in both modes.
+- Incorrect login error does not identify the failed field.
+- Logout protects the root route.
+- English capitalisation remains consistent.
+
+Production gates
+- npm run validate:text passes.
+- npm run lint passes.
+- npm run typecheck passes.
+- npm run test passes.
+- npm run build passes.
+- npm run test:e2e passes or documented platform-specific exclusions are reviewed.
+- No unresolved browser console errors in verified paths.
+- No selected-range production runtime errors after deployment.
+
+======================================================================
+24. CLONE ACCEPTANCE CHECKLIST
+======================================================================
+
+[ ] Product name and owner-specific content are configured.
+[ ] Access gate protects the simulator.
+[ ] Simulation-only notice appears on every relevant surface.
+[ ] Normal contains 20 conditions.
+[ ] School contains 21 conditions.
+[ ] Both modes retain their no-violation baseline.
+[ ] All 39 violation selections use assigned physical motion profiles.
+[ ] School layout changes are page/mode scoped.
+[ ] Normal layout remains a public mid-block crossing.
+[ ] School shows gate, courtyard, and compact student group.
+[ ] Both modes show CCTV readiness.
+[ ] Every violation produces synthetic plate evidence at Detected.
+[ ] No-violation cases do not capture a plate.
+[ ] Seven stages, progress, caption, timers, and logs are synchronised.
+[ ] STOP-before-WALK invariant is enforced in code and tests.
+[ ] Critical collision and fire states remain STOP/HOLD.
+[ ] Fire and STOP signs do not overlap.
+[ ] Collision alarm occurs only after simulated contact.
+[ ] All notification recipients are clearly fictional.
+[ ] Local review can confirm or dismiss without external effects.
+[ ] Event history can be filtered and hidden locally.
+[ ] Counters update from the same history records.
+[ ] PDF report is readable and contains the evidence boundary.
+[ ] Keyboard, screen-reader text, focus, and reduced motion are implemented.
+[ ] 360 px layout has no unintended document overflow.
+[ ] UTF-8, en-MY, and MYT formatting rules pass.
+[ ] Production build and complete test matrix pass.
+[ ] Deployment has explicit owner approval.
+[ ] Production URL, READY status, HTTP response, and runtime errors are verified.
+
+======================================================================
+25. ELEMENTS THAT MAY BE CUSTOMISED
+======================================================================
+
+May be changed for a new webpage
+- Brand name, monogram, owner, representative location, and explanatory copy.
+- Colour palette while preserving contrast and semantic status distinctions.
+- Organisation-specific fictional recipient names.
+- Camera identifier and synthetic plate prefix.
+- Hosting project and domain.
+- Scenario copy when supported by new acceptance evidence.
+- Framework version after reviewing its actual current documentation and tests.
+
+Must not be casually changed
+- STOP-before-WALK invariant.
+- Simulation-only and no-dispatch boundaries.
+- Seven-stage synchronisation contract.
+- Distinct scenario motion requirement.
+- Human-review requirement.
+- Synthetic/no-identification CCTV boundary.
+- Normal/School context separation unless the clone explicitly changes scope.
+- Accessibility and responsive acceptance gates.
+
+======================================================================
+26. REPLICATION COMPLETION DEFINITION
+======================================================================
+
+The clone is considered similar enough only when it reproduces all of the
+following as one coherent experience:
+
+- Comparable civic visual hierarchy and responsive layout.
+- Protected access and clear simulation boundaries.
+- Normal and School crossing contexts with correct condition counts.
+- Distinct deterministic actor motion for every available violation.
+- Safe, synchronised signal and pedestrian logic.
+- Seven visible chronological stages and progressive event history.
+- Simulated CCTV plate evidence for violations in both modes.
+- Critical collision/fire presentation and local mock workflow.
+- Counters, review, filtering, reset/replay, and offline PDF reporting.
+- Keyboard accessibility, responsive behaviour, reduced motion, and clean text.
+- Complete local verification and confirmed production deployment state.
+
+Matching only the colours or static screenshot is not sufficient. The clone
+must replicate the safety behaviour, data relationships, interactions, and
+verification quality as well as the visible composition.
+
+END OF TEMPLATE
