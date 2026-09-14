@@ -76,6 +76,7 @@
 
 | Change | Files Touched | Date |
 | --- | --- | --- |
+| Added an explicit Vercel upload boundary after the CLI included Git-ignored local material; future SmartCross 2.2 deployments exclude generated artifacts, internal outputs and all Phase 2 implementation files | `.vercelignore` | 2026-09-14 |
 | Prepared the SmartCross 2.2 Git boundary by excluding credentials, generated output and all Phase 2 implementation files, which belong in the separate SmartCity repository | `.gitignore` | 2026-09-14 |
 | Made the SmartCross 2.2 root, legacy route and deterministic simulation API publicly accessible; corrected 2.2 metadata, removed authenticated-session UI language, and excluded all Phase 2/authentication source from the dedicated 2.2 deployment bundle while preserving simulation-only and human-review boundaries | `app/page.tsx`, `app/smartcross-2-2/page.tsx`, `app/api/simulate/route.ts`, `app/layout.tsx`, `components/dashboard.tsx`, `scripts/build-deploy-bundle.mjs` | 2026-09-14 |
 | Corrected the deployment-bundle root-route import rewrite after the approved SmartCross 2.2 dashboard replaced the former Phase 2 root; this keeps the bundled root tied to the locked 2.2 dashboard | `scripts/build-deploy-bundle.mjs` | 2026-09-14 |
