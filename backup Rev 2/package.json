@@ -1,0 +1,35 @@
+{
+  "name": "lintas-ai-link-2",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run verify:smartcross-2.2-lock && npm run validate:text && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "report:sample": "node scripts/generate-pdf-sample.mjs",
+    "validate:text": "node scripts/validate-text-standard.mjs",
+    "verify:smartcross-2.2-lock": "node scripts/verify-smartcross-2-2-lock.mjs"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@tailwindcss/postcss": "4.1.18",
+    "@types/node": "24.10.9",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.3.1",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}
