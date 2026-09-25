@@ -1,0 +1,4 @@
+import { createHash } from "node:crypto"; import fs from "node:fs"; import path from "node:path";
+const root=process.cwd(), file=path.join(root,"control/candidate-manifest.json"), manifest=JSON.parse(fs.readFileSync(file,"utf8")), failures=[];
+for(const [relative,expected] of Object.entries(manifest.files)){const target=path.resolve(root,relative), rel=path.relative(root,target);if(rel.startsWith("..")||path.isAbsolute(rel)||!fs.existsSync(target)){failures.push(relative+": missing or outside package");continue;}const actual=createHash("sha256").update(fs.readFileSync(target)).digest("hex");if(actual!==expected)failures.push(relative+": hash mismatch");}
+if(failures.length){console.error(failures.join("\n"));process.exit(1)} console.log("Candidate manifest verified ("+Object.keys(manifest.files).length+" controlled files).");

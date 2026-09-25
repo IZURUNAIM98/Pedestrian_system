@@ -1,6 +1,6 @@
-# SmartCross 2.2
+# SmartCross
 
-Simulation-only smart pedestrian-crossing prototype for Ampang Jaya. It models animated normal and school crossings with one no-violation baseline plus 20 shared driver and motorist violation cases, seven visible chronological stages per condition, a shared real-time traffic-light countdown with a verified 12-second protected-WALK window, safe traffic-signal responses, action-synchronised event records, PDF reporting, and a keyboard-accessible seven-stage simulation sequence.
+Simulation-only smart pedestrian-crossing prototype for Ampang Jaya. It models animated normal and school crossings with one no-violation baseline plus 20 shared driver and motorist violation cases, mirrored 40 m eastbound and westbound speed-detection zones, incoming and outgoing CCTV feeds on both approaches (40 m detection range), seven visible chronological stages per condition, a shared real-time traffic-light countdown with a verified 12-second protected-WALK window, safe traffic-signal responses, action-synchronised event records, PDF reporting, and a keyboard-accessible seven-stage simulation sequence. An emergency-priority mode demonstrates validated ambulance, police, and fire/rescue passage with pedestrian protection, conflicting-traffic clearance, and controlled recovery.
 
 When simulated camera health falls below 75%, the normal camera-driven path is isolated and a pedestrian-actuated fallback becomes available. One request is latched, duplicate presses are ignored, and a conservative 15-second WALK is issued only after the simulated controller, radar, LiDAR, stop-line, and vehicle-presence checks establish RED and all-red protection. Any disagreement enters Safety Hold. Healthy-camera scenarios are unchanged.
 
@@ -34,7 +34,7 @@ npx playwright install chromium
 npx playwright test
 ```
 
-`smartcross-2.2.lock.json` pins the exact SmartCross 2.2 application, shared runtime, and contract-test files in this repository by SHA-256. Phase 2 files are deliberately excluded so that work can continue independently. The deployment-bundle builder verifies this lock first and stops if a locked file has drifted; refreshing the manifest is an explicit owner-reviewed action.
+`smartcross-2.2.lock.json` pins the exact SmartCross application, shared runtime, and contract-test files in this repository by SHA-256. The legacy filename and `/smartcross-2-2` route remain unchanged for compatibility. Phase 2 files are deliberately excluded so that work can continue independently. The deployment-bundle builder verifies this lock first and stops if a locked file has drifted; refreshing the manifest is an explicit owner-reviewed action.
 
 The permanent English and UTF-8 rules, including runtime handling for imported, database-derived and AI-generated text, are documented in [docs/language-and-encoding-standard.md](docs/language-and-encoding-standard.md).
 

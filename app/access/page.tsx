@@ -4,18 +4,19 @@ import { redirect } from "next/navigation";
 import { AccessForm } from "@/components/access-form";
 import { SESSION_COOKIE, sessionIsValid } from "@/lib/demo-auth";
 
-export const metadata: Metadata = { title: "Secure Access | SmartCross 2.2" };
+export const metadata: Metadata = { title: "Secure Access | SmartCross" };
 
-export default async function AccessPage() {
+export default async function AccessPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const cookieStore = await cookies();
   if (sessionIsValid(cookieStore.get(SESSION_COOKIE)?.value)) redirect("/");
+  const params = await searchParams;
 
   return (
     <main className="access-page">
       <section className="access-panel" aria-labelledby="access-title">
-        <div className="access-brand"><span aria-hidden="true">2.2</span><div><strong>SmartCross 2.2</strong></div></div>
+        <div className="access-brand"><span aria-hidden="true">SC</span><div><strong>SmartCross</strong></div></div>
         <div className="access-copy"><span className="eyebrow">AUTHORISED DEMONSTRATION ACCESS</span><h1 id="access-title">Sign in to the simulator</h1><p>Enter the project credentials to review local crossing scenarios, incident timelines, and reports.</p></div>
-        <AccessForm />
+        <AccessForm initialError={params.error ? "The ID or password is incorrect." : ""} />
         <div className="access-boundary"><strong>Prototype access only</strong><span>This sign-in protects a local demonstration. It is not connected to MPAJ identity systems and must not be used as production authentication.</span></div>
       </section>
       <aside className="access-visual" aria-label="Simulation boundary summary">

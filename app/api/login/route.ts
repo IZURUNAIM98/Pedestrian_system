@@ -9,12 +9,19 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = loginSchema.safeParse(await request.json().catch(() => null));
+  const contentType = request.headers.get("content-type") ?? "";
+  const raw = contentType.includes("application/json")
+    ? await request.json().catch(() => null)
+    : Object.fromEntries(await request.formData().catch(() => new FormData()));
+  const parsed = loginSchema.safeParse(raw);
   if (!parsed.success || !credentialsAreValid(parsed.data.id, parsed.data.password)) {
+    if (!contentType.includes("application/json")) return new NextResponse(null, { status: 303, headers: { Location: "/access?error=1" } });
     return withUtf8JsonContentType(NextResponse.json({ error: "The ID or password is incorrect." }, { status: 401 }));
   }
 
-  const response = NextResponse.json({ ok: true });
+  const response = contentType.includes("application/json")
+    ? NextResponse.json({ ok: true })
+    : new NextResponse(null, { status: 303, headers: { Location: "/" } });
   response.cookies.set(SESSION_COOKIE, createSessionToken(), {
     httpOnly: true,
     sameSite: "lax",
@@ -22,5 +29,5 @@ export async function POST(request: Request) {
     path: "/",
     maxAge: SESSION_DURATION_SECONDS,
   });
-  return withUtf8JsonContentType(response);
+  return contentType.includes("application/json") ? withUtf8JsonContentType(response) : response;
 }

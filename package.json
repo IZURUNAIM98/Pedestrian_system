@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run verify:smartcross-2.2-lock && npm run validate:text && next build",
+    "build": "npm run verify:candidate-lock && npm run validate:text && next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -12,7 +12,12 @@
     "test:e2e": "playwright test",
     "report:sample": "node scripts/generate-pdf-sample.mjs",
     "validate:text": "node scripts/validate-text-standard.mjs",
-    "verify:smartcross-2.2-lock": "node scripts/verify-smartcross-2-2-lock.mjs"
+    "verify:smartcross-2.2-lock": "node scripts/verify-smartcross-2-2-lock.mjs",
+    "test:targeted": "vitest run tests/replay-adapter-identity.test.ts tests/live-integration-hil-rehearsal.test.ts",
+    "test:regression": "vitest run tests/demo-auth.test.ts tests/emergency-priority.test.ts tests/heavy-traffic.test.ts tests/live-integration.test.ts tests/live-integration-gate.test.ts tests/live-integration-hil-gate.test.ts tests/live-integration-hil-rehearsal.test.ts tests/live-integration-red-team.test.ts tests/observation-fusion.test.ts tests/operator-events.test.ts tests/rt-hil-001-closure-deficiencies.test.ts tests/safety-orchestrator.test.ts tests/simulation.test.ts tests/text-standard.test.ts",
+    "verify:candidate-lock": "node scripts/verify-candidate-lock.mjs",
+    "verify:manifest": "node scripts/verify-package-manifest.mjs",
+    "verify:containment": "node scripts/verify-package-containment.mjs"
   },
   "dependencies": {
     "next": "16.3.1",

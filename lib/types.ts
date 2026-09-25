@@ -13,6 +13,36 @@ export type LightingCondition = "day" | "night";
 export type VisibilityCondition = "clear" | "haze" | "dense-haze";
 export type SensorHealth = "operational" | "constrained" | "degraded";
 export type ConfidenceBand = "usable" | "limited" | "non-usable" | "failed";
+export type EmergencyVehicleType = "ambulance" | "police" | "fire-rescue";
+export type EmergencyDirection = "Eastbound" | "Westbound";
+export type EmergencyPriorityState = "NORMAL" | "EMERGENCY_DETECTED" | "VALIDATING" | "DETERMINE_APPROACH" | "CALCULATE_OCCUPANCY" | "PEDESTRIAN_CLEARANCE" | "STOP_NEW_ENTRY" | "TRAFFIC_CLEARANCE" | "EMERGENCY_PRIORITY" | "EMERGENCY_PASSING" | "CONFIRM_CROSSING_CLEAR" | "RECOVERY";
+
+export interface EmergencyPriorityFrame {
+  index: number;
+  state: EmergencyPriorityState;
+  emergencyX: number;
+  conflictVehicleX: number;
+  pedestrianProgress: number;
+    pedestrianSignal: PedestrianState;
+    vehicleSignal: SignalState;
+    conflictingVehicleSignal: SignalState;
+  crossingStatus: "clear" | "occupied" | "protected" | "emergency-passing";
+  action: string;
+}
+
+export interface EmergencyPriorityRecord {
+  vehicleType: EmergencyVehicleType;
+  direction: EmergencyDirection;
+  detectionSource: "CCTV + radar";
+  confidence: number;
+  validationStatus: "validated" | "unvalidated" | "sensor-disagreement";
+  detectionDistanceMeters: number;
+  speedKmh: number;
+  priorityStatus: "active" | "complete" | "safe-hold";
+  cctvDetectionRangeMeters: number;
+  frames: EmergencyPriorityFrame[];
+  eventLog: EventLogEntry[];
+}
 
 export interface OperatingConditions {
   weather: WeatherCondition;
@@ -102,6 +132,7 @@ export interface SimulationResult {
   signal: SignalResponse;
   incident: boolean;
   emergencyReviewRequired: boolean;
+  safetyDecision: import("@/lib/safety-orchestrator").SafetyDecision;
   cctvEvidence: CctvEvidence | null;
   notificationRecipients: MockNotificationRecipient[];
   countermeasures: string[];
@@ -112,4 +143,5 @@ export interface SimulationResult {
     protectedCrossingVerified: boolean;
     duplicatePresses: number;
   };
+  emergencyPriority?: EmergencyPriorityRecord;
 }

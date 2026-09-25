@@ -1,19 +1,21 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { createSessionToken, credentialsAreValid, sessionIsValid } from "@/lib/demo-auth";
+import { loadLocalAuthEnvironment } from "./load-local-auth-env";
 
 beforeAll(() => {
-  process.env.DEMO_ACCESS_ID = "ENNOVA";
-  process.env.DEMO_ACCESS_PASSWORD = "123456";
+  loadLocalAuthEnvironment();
+  expect(process.env.DEMO_ACCESS_ID).toBeTruthy();
+  expect(process.env.DEMO_ACCESS_PASSWORD).toBeTruthy();
 });
 
 describe("demonstration access", () => {
   it("accepts the configured credentials", () => {
-    expect(credentialsAreValid("ENNOVA", "123456")).toBe(true);
+    expect(credentialsAreValid(process.env.DEMO_ACCESS_ID ?? "", process.env.DEMO_ACCESS_PASSWORD ?? "")).toBe(true);
   });
 
   it("rejects incorrect credentials", () => {
-    expect(credentialsAreValid("ENNOVA", "wrong")).toBe(false);
-    expect(credentialsAreValid("UNKNOWN", "123456")).toBe(false);
+    expect(credentialsAreValid(process.env.DEMO_ACCESS_ID ?? "", "wrong-password")).toBe(false);
+    expect(credentialsAreValid("UNKNOWN", process.env.DEMO_ACCESS_PASSWORD ?? "")).toBe(false);
   });
 
   it("validates signed sessions and rejects expired or modified tokens", () => {

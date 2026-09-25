@@ -1,19 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CrossingView } from "@/components/crossing-view";
 import { EventLog } from "@/components/event-log";
 import { TimelineRail } from "@/components/timeline-rail";
-import { applyConfidenceSafetyOverride, DEFAULT_OPERATING_CONDITIONS, deriveOperatingConditions, SCENARIOS, getProgress, runSimulation } from "@/lib/simulation";
+import { HeavyTrafficPanel } from '@/components/heavy-traffic-panel';
+import { applyConfidenceSafetyOverride, DEFAULT_OPERATING_CONDITIONS, deriveOperatingConditions, SCENARIOS, getProgress, protectedFallbackScenarioId, runSimulation } from "@/lib/simulation";
 import { capitaliseEnglish } from "@/lib/text-standard";
 import { createSimulationReportPdf } from "@/lib/pdf-report";
 import { frameFor, idleFrame, MOTION_FRAME_COUNT, MOTION_STAGE_BY_FRAME, STANDARD_MOTION_FRAME_MS, timingFor } from "@/lib/motion";
-import { TIMELINE_STAGES, type CrossingMode, type EventLogEntry, type OperatingConditions, type ScenarioId, type SimulationResult } from "@/lib/types";
+import { TIMELINE_STAGES, type CrossingMode, type OperatingConditions, type ScenarioId, type SimulationResult } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
-import { assessCameraFallback, DEGRADED_PROTECTED_WALK_SECONDS, isCameraDegraded } from "@/lib/camera-fallback";
+import { assessCameraFallback, DEFAULT_SECONDARY_SAFETY_INPUTS, DEGRADED_PROTECTED_WALK_SECONDS, isCameraDegraded } from "@/lib/camera-fallback";
+import { createEmergencyPriorityRecord } from "@/lib/emergency-priority";
+import type { EmergencyDirection, EmergencyPriorityRecord, EmergencyVehicleType } from "@/lib/types";
 
 type View = "overview" | "simulator" | "technology" | "scenarios" | "incidents" | "reports";
 type MockNotificationStatus = "idle" | "sent" | "acknowledged" | "resolved";
@@ -61,12 +65,14 @@ const viewHeadings: Record<View, { eyebrow: string; title: string; description: 
 };
 
 export function Dashboard() {
+  const router = useRouter();
   const [view, setView] = useState<View>("simulator");
   const [mode, setMode] = useState<CrossingMode>("normal");
+  const [sequence, setSequence] = useState('crossing');
+  const [heavyRunning, setHeavyRunning] = useState(false);
   const [scenarioId, setScenarioId] = useState<ScenarioId>("normal-no-violation");
   const [result, setResult] = useState<SimulationResult>(() => runSimulation({ mode: "normal", scenarioId: "normal-no-violation" }, initialTime));
   const [history, setHistory] = useState<SimulationResult[]>([]);
-  const [logFilter, setLogFilter] = useState<"all" | EventLogEntry["category"]>("all");
   const [reviewStatus, setReviewStatus] = useState<"pending" | "confirmed" | "dismissed">("pending");
   const [announcement, setAnnouncement] = useState("Normal crossing with no violation is ready.");
   const [animationStep, setAnimationStep] = useState(MOTION_FRAME_COUNT - 1);
@@ -79,21 +85,32 @@ export function Dashboard() {
   const [operatingConditions, setOperatingConditions] = useState<OperatingConditions>(DEFAULT_OPERATING_CONDITIONS);
   const [fallbackRequested, setFallbackRequested] = useState(false);
   const [duplicateButtonPresses, setDuplicateButtonPresses] = useState(0);
+  const [emergencyPriority, setEmergencyPriority] = useState<EmergencyPriorityRecord | null>(null);
+  const [emergencyStage, setEmergencyStage] = useState(0);
+  const [emergencyRunning, setEmergencyRunning] = useState(false);
+  const [emergencyType, setEmergencyType] = useState<EmergencyVehicleType>("ambulance");
+  const [emergencyDirection, setEmergencyDirection] = useState<EmergencyDirection>("Eastbound");
   const alarmedSession = useRef<string | null>(null);
 
   const availableScenarios = useMemo(() => SCENARIOS.filter((item) => item.supportedModes.includes(mode)), [mode]);
   const incidents = history.filter((item) => item.incident);
   const selectedScenario = SCENARIOS.find((item) => item.id === scenarioId) ?? availableScenarios[0];
   const previewResult = useMemo(() => runSimulation({ mode, scenarioId, operatingConditions }, initialTime), [mode, operatingConditions, scenarioId]);
+  const heavySceneResult = useMemo(() => runSimulation({mode,scenarioId:`${mode}-no-violation`},initialTime),[mode]);
   const sceneResult = hasRun ? result : previewResult;
   const cameraDegraded = isCameraDegraded(operatingConditions);
-  const fallbackAssessment = assessCameraFallback(operatingConditions, fallbackRequested);
+  const fallbackAssessment = assessCameraFallback(operatingConditions, fallbackRequested, {
+    ...DEFAULT_SECONDARY_SAFETY_INPUTS,
+    controllerAvailable: selectedScenario.severity !== "critical",
+  });
   const sceneStep = hasRun ? animationStep : 0;
+  const activeEmergencyFrame = emergencyPriority?.frames[emergencyStage] ?? null;
   const activeTimelineStep = MOTION_STAGE_BY_FRAME[Math.min(animationStep, MOTION_FRAME_COUNT - 1)];
   const activeStage = result.timeline[activeTimelineStep];
-  const rawActiveMotion = hasRun ? frameFor(result.scenario.id, result.mode, animationStep) : idleFrame();
+  const activeMotionScenarioId = sceneResult.cameraFallback?.protectedCrossingVerified ? protectedFallbackScenarioId(sceneResult.mode) : result.scenario.id;
+  const rawActiveMotion = hasRun ? frameFor(activeMotionScenarioId, result.mode, animationStep) : idleFrame();
   const activeMotion = sceneResult.cameraFallback?.protectedCrossingVerified ? rawActiveMotion : applyConfidenceSafetyOverride(rawActiveMotion, sceneResult.confidenceAssessment);
-  const standardActiveTiming = hasRun ? timingFor(result.scenario.id, result.mode, animationStep) : { durationMs: 0, protectedWalkSecondsAtStart: null };
+  const standardActiveTiming = hasRun ? timingFor(activeMotionScenarioId, result.mode, animationStep) : { durationMs: 0, protectedWalkSecondsAtStart: null };
   const activeTiming = sceneResult.cameraFallback?.protectedCrossingVerified && rawActiveMotion.pedestrianSignal === "WALK"
     ? { durationMs: standardActiveTiming.durationMs * (DEGRADED_PROTECTED_WALK_SECONDS / 12), protectedWalkSecondsAtStart: standardActiveTiming.protectedWalkSecondsAtStart === null ? null : Math.ceil(standardActiveTiming.protectedWalkSecondsAtStart * (DEGRADED_PROTECTED_WALK_SECONDS / 12)) }
     : standardActiveTiming;
@@ -103,7 +120,7 @@ export function Dashboard() {
     ? frameSecondsRemaining
     : Math.max(0, activeTiming.protectedWalkSecondsAtStart - elapsedSeconds);
   const timelineProgress = !hasRun ? 0 : isAnimating ? Math.round(((activeTimelineStep + 1) / TIMELINE_STAGES.length) * 100) : getProgress(result.timeline);
-  const violationHistoryEntries = useMemo(() => history.filter((item) => item.scenario.violation && !hiddenLogSessions.has(item.sessionId)).flatMap((item) => {
+  const violationHistoryEntries = useMemo(() => history.filter((item) => (item.scenario.violation || item.emergencyPriority) && !hiddenLogSessions.has(item.sessionId)).flatMap((item) => {
     const visibleEntries = hasRun && item.sessionId === result.sessionId ? item.eventLog.slice(0, animationStep + 1) : item.eventLog;
     return visibleEntries.map((entry) => ({ ...entry, id: `${item.sessionId}-${entry.id}`, message: `${item.scenario.label}: ${entry.message}` }));
   }), [animationStep, hasRun, hiddenLogSessions, history, result.sessionId]);
@@ -139,8 +156,25 @@ export function Dashboard() {
     setAnnouncement(`Critical incident detected in ${result.scenario.label}. Three short simulated alarm tones sounded. Both vehicles STOP; pedestrian HOLD.`);
   }, [activeMotion.controller, hasRun, result.scenario.label, result.sessionId]);
 
+  useEffect(() => {
+    if (!emergencyRunning || !emergencyPriority) return;
+    const timer = window.setTimeout(() => {
+      if (emergencyStage >= emergencyPriority.frames.length - 1) {
+        setEmergencyStage(emergencyPriority.frames.length - 1);
+        setEmergencyRunning(false);
+        if (emergencyPriority.priorityStatus === "active") {
+          setEmergencyPriority({ ...emergencyPriority, priorityStatus: "complete" });
+        }
+        setAnnouncement("Emergency priority sequence complete. Crossing recovered to normal operation.");
+      } else setEmergencyStage((stage) => stage + 1);
+    }, 850);
+    return () => window.clearTimeout(timer);
+  }, [emergencyPriority, emergencyRunning, emergencyStage]);
+
   function changeMode(nextMode: CrossingMode) {
     setIsAnimating(false);
+    setEmergencyRunning(false);
+    setEmergencyPriority(null);
     setMode(nextMode);
     const first = SCENARIOS.find((item) => item.supportedModes.includes(nextMode));
     if (first) setScenarioId(first.id);
@@ -171,6 +205,22 @@ export function Dashboard() {
     }
   }
 
+  function executeEmergencyPriority() {
+    const base = runSimulation({ mode, scenarioId: `${mode}-no-violation` as ScenarioId, operatingConditions }, new Date());
+    const priority = createEmergencyPriorityRecord({ vehicleType: emergencyType, direction: emergencyDirection });
+    const next: SimulationResult = { ...base, sessionId: `EMG-${Date.now()}`, emergencyReviewRequired: true, emergencyPriority: priority, eventLog: priority.eventLog };
+    setEmergencyPriority(priority);
+    setEmergencyStage(0);
+    setEmergencyRunning(true);
+    setResult(next);
+    setHistory((current) => [next, ...current].slice(0, 12));
+    setHasRun(true);
+    setIsAnimating(false);
+    setReviewStatus("pending");
+    setView("simulator");
+    setAnnouncement(`${emergencyType} emergency priority sequence started from ${emergencyDirection}.`);
+  }
+
   function requestDegradedCrossing() {
     if (fallbackRequested || isAnimating) {
       setDuplicateButtonPresses((count) => count + 1);
@@ -184,6 +234,9 @@ export function Dashboard() {
 
   function resetSequence() {
     setIsAnimating(false);
+    setEmergencyRunning(false);
+    setEmergencyPriority(null);
+    setEmergencyStage(0);
     setAnimationStep(0);
     setHasRun(false);
     setMockNotificationStatus("idle");
@@ -193,7 +246,7 @@ export function Dashboard() {
   }
 
   function clearEventLog() {
-    setHiddenLogSessions((current) => new Set([...current, ...history.filter((item) => item.scenario.violation).map((item) => item.sessionId)]));
+    setHiddenLogSessions((current) => new Set([...current, ...history.filter((item) => item.scenario.violation || item.emergencyPriority).map((item) => item.sessionId)]));
     setAnnouncement("Violation event log cleared from this local view.");
   }
 
@@ -204,10 +257,21 @@ export function Dashboard() {
     const url = URL.createObjectURL(new Blob([pdfBuffer], { type: "application/pdf" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "smartcross-2-2-simulation-report.pdf";
+    anchor.download = "smartcross-simulation-report.pdf";
     anchor.click();
     URL.revokeObjectURL(url);
     setAnnouncement("Simulation report downloaded as PDF.");
+  }
+
+  async function logOut() {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (!response.ok) throw new Error("Logout failed.");
+      router.replace("/access");
+      router.refresh();
+    } catch {
+      setAnnouncement("Sign-out failed. Try again.");
+    }
   }
 
   return (
@@ -215,15 +279,15 @@ export function Dashboard() {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="topbar">
         <div className="brand-mark" aria-hidden="true">AJ</div>
-        <div className="brand-copy"><strong>SmartCross 2.2</strong></div>
-        <div className="topbar-actions"><div className="boundary-chip"><span /> Simulation only</div></div>
+        <div className="brand-copy"><strong>SmartCross</strong></div>
+        <div className="topbar-actions"><div className="boundary-chip operating-mode-chip" role="status" aria-label="Operating mode: Simulation"><span /> Mode: SIMULATION · No actuation</div><button className="logout-button" type="button" onClick={logOut}>Log out</button></div>
       </header>
 
       <nav className="main-nav" aria-label="Primary navigation">
         {navigation.map((item) => (
           <button key={item.id} className={view === item.id ? "nav-item active" : "nav-item"} onClick={() => setView(item.id)} aria-current={view === item.id ? "page" : undefined}>{item.label}</button>
         ))}
-        <span className="supervised-label">Public demonstration. Supervised simulation.</span>
+        <span className="supervised-label">Authorised demonstration. Supervised simulation.</span>
       </nav>
 
       <main id="main-content" className="page-content">
@@ -236,7 +300,9 @@ export function Dashboard() {
         <div className="sr-only" aria-live="polite">{announcement}</div>
 
         {view === "overview" ? <Overview history={history} result={result} onOpenSimulator={() => setView("simulator")} /> : null}
-        {view === "simulator" ? (
+        {view === 'simulator' ? <div className="ht-sequence-select"><label htmlFor="sequence-select">Simulation sequence</label><select id="sequence-select" disabled={isAnimating||emergencyRunning||heavyRunning} value={sequence} onChange={e=>setSequence(e.target.value)}><option value="crossing">Crossing and existing violation sequences</option><option value="heavy">Peak-Hour Heavy Traffic and Queue Stabilisation</option></select></div> : null}
+        {view === 'simulator' && sequence === 'heavy' ? <HeavyTrafficPanel mode={mode} result={heavySceneResult} onModeChange={changeMode} onBusy={setHeavyRunning}/> : null}
+        {view === "simulator" && sequence === 'crossing' ? (
           <div className="simulator-layout simulator-reference-layout">
             <section className="simulator-board" aria-labelledby="simulator-board-title">
               <div className="simulator-release-bar"><span><i /> SIMULATION ONLY</span><span>One crossing view. No live enforcement or signal connection.</span></div>
@@ -247,20 +313,35 @@ export function Dashboard() {
               </div>
               <div className="simulator-stage">
                 <div className="workspace-column">
-                  <CrossingView result={sceneResult} animationFrame={sceneStep} isAnimating={isAnimating} hasRun={hasRun} controllerCountdown={phaseSeconds} motionDurationMs={activeTiming.durationMs || STANDARD_MOTION_FRAME_MS} />
+                  <CrossingView result={sceneResult} animationFrame={sceneStep} isAnimating={isAnimating || emergencyRunning} hasRun={hasRun} controllerCountdown={activeEmergencyFrame ? Math.max(0, 12 - emergencyStage) : phaseSeconds} motionDurationMs={activeTiming.durationMs || STANDARD_MOTION_FRAME_MS} emergencyPriority={emergencyPriority} emergencyFrame={activeEmergencyFrame} />
+                  <div className="simulation-command-bar">
+                    <div className="simulation-command-select">
+                      <span className="eyebrow">40 M RADAR + CCTV MONITORING</span>
+                      <label id="simulation-command-title" htmlFor="scenario-select">Crossing condition ({availableScenarios.length} options)</label>
+                      <select id="scenario-select" aria-describedby="scenario-help" value={scenarioId} disabled={isAnimating} onChange={(event) => { setIsAnimating(false); setScenarioId(event.target.value as ScenarioId); setAnimationStep(0); setHasRun(false); setFallbackRequested(false); setDuplicateButtonPresses(0); }}>{availableScenarios.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select>
+                      <small id="scenario-help">{selectedScenario.summary}</small>
+                    </div>
+                    <div className="simulation-command-actions">
+                      {cameraDegraded ? <Button onClick={requestDegradedCrossing} disabled={isAnimating || (hasRun && fallbackRequested)}>{fallbackRequested ? "Crossing request registered" : "Press pedestrian request button"}</Button> : <Button onClick={() => executeSimulation(false)} disabled={isAnimating || (hasRun && result.scenario.severity === "critical")}>{isAnimating ? "Simulation running..." : hasRun && result.scenario.severity === "critical" ? "Reset required before replay" : hasRun ? "Replay deterministic sequence" : "Run seven-stage simulation"}</Button>}
+                      {hasRun ? <Button variant="secondary" onClick={resetSequence}>{result.scenario.severity === "critical" ? "Reset simulation" : "Reset sequence"}</Button> : null}
+                    </div>
+                  </div>
+                  <div className="emergency-priority-controls" aria-labelledby="emergency-priority-title">
+                    <div><span className="eyebrow">EMERGENCY PRIORITY MODE</span><h3 id="emergency-priority-title">Incoming emergency vehicle sequence</h3><p>CCTV + radar validates a 40 m approach. Existing pedestrians finish safely; new entry is held while conflicting traffic stops.</p></div>
+                    <div className="emergency-priority-fields"><label>Vehicle<select value={emergencyType} disabled={isAnimating || emergencyRunning} onChange={(event) => setEmergencyType(event.target.value as EmergencyVehicleType)}><option value="ambulance">Ambulance</option><option value="police">Police</option><option value="fire-rescue">Fire / rescue</option></select></label><label>Direction<select value={emergencyDirection} disabled={isAnimating || emergencyRunning} onChange={(event) => setEmergencyDirection(event.target.value as EmergencyDirection)}><option value="Eastbound">Eastbound</option><option value="Westbound">Westbound</option></select></label><Button onClick={executeEmergencyPriority} disabled={isAnimating || emergencyRunning}>Run emergency priority</Button></div>
+                    {activeEmergencyFrame && emergencyPriority ? <div className="emergency-priority-status" role="status"><b>{activeEmergencyFrame.state}</b><span>{emergencyPriority.vehicleType} | {emergencyPriority.direction} | {emergencyPriority.detectionDistanceMeters} m | {emergencyPriority.speedKmh} km/h</span><small>Detection: {emergencyPriority.detectionSource} | Validation: {emergencyPriority.validationStatus} | Crossing: {activeEmergencyFrame.crossingStatus} | CCTV range: {emergencyPriority.cctvDetectionRangeMeters} m | Priority: {emergencyPriority.priorityStatus}</small></div> : null}
+                  </div>
                   <CctvEvidencePanel result={sceneResult} active={hasRun && sceneStep >= 2} />
                   <SimulationStats history={history} />
                 </div>
                 <Card className="control-panel">
-                  <div className={`phase-panel confidence-${sceneResult.confidenceAssessment.band}`} data-confidence-band={sceneResult.confidenceAssessment.band}><span>Current phase</span><strong>{hasRun ? activeStage.name : "Ready"}</strong><div className="phase-metrics"><p><b data-testid="controller-countdown">{phaseSeconds}s</b><small>Real-time countdown</small></p><p><b data-testid="adjusted-confidence">{Math.round(sceneResult.detectionConfidence * 100)}%</b><small>Simulated system detection confidence</small></p></div><div className="confidence-status" role="status"><b>{sceneResult.confidenceAssessment.label}</b><span>{sceneResult.confidenceAssessment.action}</span></div><em>{capitaliseEnglish(activeMotion.activeSensor)} sensor, {activeMotion.risk.toLowerCase()} risk, {activeMotion.pedestrianSignal === "WALK" && activeMotion.routeClear ? "protected WALK" : "pedestrian WAIT/HOLD"}</em></div>
-                  <div className="card-heading"><div><span className="eyebrow">AIM METHOD</span><h2 id="control-title">Run a crossing condition</h2></div></div>
-                  <div className="form-field"><label htmlFor="scenario-select">Crossing condition ({availableScenarios.length} options)</label><select id="scenario-select" aria-describedby="scenario-help" value={scenarioId} onChange={(event) => { setIsAnimating(false); setScenarioId(event.target.value as ScenarioId); setAnimationStep(0); setHasRun(false); }}>{availableScenarios.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select><small id="scenario-help">{selectedScenario.summary}</small></div>
+                  <div className={`phase-panel confidence-${sceneResult.confidenceAssessment.band}`} data-confidence-band={sceneResult.confidenceAssessment.band}><span>Current phase</span><strong>{hasRun ? activeStage.name : "Ready"}</strong><div className="phase-metrics"><p><b data-testid="controller-countdown">{phaseSeconds}s</b><small>Real-time countdown</small></p><p><b data-testid="adjusted-confidence">{Math.round(sceneResult.detectionConfidence * 100)}%</b><small>Simulated system detection confidence</small></p></div><div className="confidence-status" role="status"><b>{sceneResult.confidenceAssessment.label}</b><span>{sceneResult.cameraFallback?.protectedCrossingVerified ? "AI input bypassed. Button-initiated fixed traffic control is active." : sceneResult.confidenceAssessment.action}</span></div><em>{capitaliseEnglish(activeMotion.activeSensor)} sensor, {activeMotion.risk.toLowerCase()} risk, {activeMotion.pedestrianSignal === "WALK" && activeMotion.routeClear ? "protected WALK" : "pedestrian WAIT/HOLD"}</em></div>
+                  <div className="card-heading"><div><span className="eyebrow">AIM METHOD</span><h2 id="control-title">Monitor the selected condition</h2></div></div>
                   <div className="input-preview"><span className="eyebrow">SIMULATED INPUT</span><strong>{selectedScenario.detection}</strong><span>Rules-based, deterministic, and not connected to a live feed</span></div>
-                  <OperatingConditionControls value={operatingConditions} disabled={isAnimating} onChange={(next) => { setOperatingConditions(next); if (!isCameraDegraded(next)) { setFallbackRequested(false); setDuplicateButtonPresses(0); } }} />
-                  {cameraDegraded ? <div className={`camera-fallback-panel ${fallbackAssessment.requestState}`} role="status" aria-live="polite"><strong>{fallbackAssessment.message}</strong><span>The button registers demand only. WALK remains controlled by the simulated RED, all-red, stop-line and secondary-sensor interlocks.</span><Button onClick={requestDegradedCrossing} disabled={isAnimating || (hasRun && fallbackRequested)}>{fallbackRequested ? "Crossing request registered" : "Press pedestrian request button"}</Button></div> : null}
-                  {!cameraDegraded ? <Button onClick={() => executeSimulation(false)} disabled={isAnimating || (hasRun && result.scenario.severity === "critical")}>{isAnimating ? "Simulation running..." : hasRun && result.scenario.severity === "critical" ? "Reset required before replay" : hasRun ? "Replay deterministic sequence" : "Run seven-stage simulation"}</Button> : null}
-                  {hasRun ? <Button variant="secondary" onClick={resetSequence}>{result.scenario.severity === "critical" ? "Reset simulation" : "Reset sequence"}</Button> : null}
+                  <OperatingConditionControls value={operatingConditions} disabled={isAnimating} onChange={(next) => { setOperatingConditions(next); setFallbackRequested(false); setDuplicateButtonPresses(0); }} />
+                  {cameraDegraded ? <div className={`camera-fallback-panel ${fallbackAssessment.requestState}`} role="status" aria-live="polite"><strong>{fallbackAssessment.message}</strong><span>The adjacent request button registers demand only. WALK remains controlled by the simulated RED, all-red, stop-line and secondary-sensor interlocks.</span></div> : null}
                   <div className="sequence-rule"><strong>Pedestrian sequence</strong><span>{selectedScenario.violation ? "The assigned violation sequence moves each actor in order. The WALK signal appears only after all vehicles have stopped and the route has been verified as clear." : "No violation: stop both approaches, display WALK, clear the route, and then resume traffic in sequence."}</span></div>
+                  <div className="sequence-rule" data-testid="authoritative-decision"><strong>Authoritative safety decision</strong><span>{sceneResult.safetyDecision.state}: {sceneResult.safetyDecision.reason}</span><small>One phase clock: {sceneResult.safetyDecision.phaseClock}. Rejected commands: {sceneResult.safetyDecision.rejectedCommands.length ? sceneResult.safetyDecision.rejectedCommands.join(", ") : "none"}.</small></div>
                   <p className="helper">Creates a local record only. No external service is contacted.</p>
                 </Card>
               </div>
@@ -285,8 +366,8 @@ export function Dashboard() {
             />
 
             <Card className="log-card full-span" aria-labelledby="log-title">
-              <div className="card-heading"><div><span className="eyebrow">ORIGINAL VIOLATION-HISTORY RECORD</span><h2 id="log-title">Violation event log</h2></div><div className="log-actions"><label className="compact-field"><span>Filter</span><select value={logFilter} onChange={(event) => setLogFilter(event.target.value as typeof logFilter)}><option value="all">All events</option><option value="sensor">Sensor</option><option value="detection">Detection</option><option value="controller">Controller</option><option value="safety">Safety</option><option value="outcome">Outcome</option></select></label><Button variant="secondary" onClick={clearEventLog} disabled={violationHistoryEntries.length === 0}>Clear log</Button></div></div>
-              <EventLog entries={violationHistoryEntries} filter={logFilter} />
+              <div className="card-heading"><div><span className="eyebrow">OPERATOR DECISION RECORD</span><h2 id="log-title">SmartCross event log</h2><p>State-change summaries appear first. Original engineering evidence remains available in Technical View.</p></div><div className="log-actions"><Button variant="secondary" onClick={clearEventLog} disabled={violationHistoryEntries.length === 0}>Clear log</Button></div></div>
+              <EventLog entries={violationHistoryEntries} operatingMode="SIMULATION" />
             </Card>
           </div>
         ) : null}
@@ -295,7 +376,7 @@ export function Dashboard() {
         {view === "incidents" ? <IncidentReview incidents={incidents} result={result} reviewStatus={reviewStatus} onReview={setReviewStatus} /> : null}
         {view === "reports" ? <Reports history={history} onExport={exportReport} /> : null}
       </main>
-      <footer><span>SmartCross 2.2 simulation build</span><span>Safety rule: Display WALK only when the route is clear and both traffic approaches are stopped.</span></footer>
+      <footer><span>SmartCross simulation build</span><span>Safety rule: Display WALK only when the route is clear and both traffic approaches are stopped.</span></footer>
     </div>
   );
 }

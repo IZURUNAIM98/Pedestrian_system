@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "packageId": "RT-HIL-001-STAGE17-TRANSFER-20260925-04",
+  "predecessorPackageId": "RT-HIL-001-STAGE17-TRANSFER-20260924-03",
+  "intendedParentCommit": "b0938e7c47302585837e34a10f0298255c732d4d",
+  "controlledPayloadFileCount": 77,
+  "inheritedRepositoryFilesPermitted": true,
+  "candidateManifest": {
+    "path": "control/candidate-manifest.json",
+    "sha256": "91a608a725efd698e8fd1312dac270c3150b9316bad89b0665f48ad3cd7261e5",
+    "detachedHashPath": "control/candidate-manifest.sha256"
+  },
+  "controlledMetadata": {
+    "control/candidate-manifest.sha256": "4f33178cb4d0843a0dfbb1218b8947527c9eb1f392f3e68e3605f008db8e6c55",
+    "control/baseline-binding-specification.md": "e3e2922f5300af4c300b1d7ec2b6f8d900c0aab2111afd7211e850acce71220f",
+    "scripts/verify-baseline-binding.mjs": "4bad569f6227c11362e059e5652bcd1408ec7b274aeaa001a40271546bfad3f4",
+    "scripts/verify-controlled-containment.mjs": "931d87ed0e94e4a11e7403b333d5903cc3ff04d47632b87e1e60d7a640c3f03f",
+    "scripts/validate-controlled-text.mjs": "6d67b8eeeda382a96e461431666d6f2abb0673709fdba73939919f813f010132"
+  },
+  "verificationScope": {
+    "containment": "Only executable and configuration files listed in candidate-manifest.json are inspected.",
+    "textValidation": "Only text-extension files listed in candidate-manifest.json are inspected.",
+    "excluded": [
+      "Inherited repository files not listed in candidate-manifest.json",
+      "node_modules/**",
+      ".next/**",
+      "tsconfig.tsbuildinfo",
+      ".git/**",
+      "Transfer evidence outside the committed baseline"
+    ]
+  }
+}

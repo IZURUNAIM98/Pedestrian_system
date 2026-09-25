@@ -55,6 +55,20 @@ describe("deterministic crossing simulation", () => {
     expect(DEGRADED_PROTECTED_WALK_SECONDS).toBe(15);
   });
 
+  it("uses the fixed protected fallback for every non-critical selected condition when AI input is unreliable", () => {
+    const conditions = { weather: "rain", lighting: "night", visibility: "dense-haze" } as const;
+    for (const mode of ["normal", "school"] as const) {
+      for (const scenario of SCENARIOS.filter((item) => item.supportedModes.includes(mode) && item.severity !== "critical")) {
+        const result = runSimulation({ mode, scenarioId: scenario.id, operatingConditions: conditions, manualCrossingRequest: true });
+        expect(result.cameraFallback?.protectedCrossingVerified, scenario.id).toBe(true);
+        expect(result.signal, scenario.id).toMatchObject({ vehicle: "STOP", pedestrian: "WALK" });
+        const walkStages = result.timeline.filter((stage) => stage.detail.includes("pedestrian signal: WALK"));
+        expect(walkStages.length, scenario.id).toBeGreaterThan(0);
+        expect(walkStages.every((stage) => stage.detail.includes("vehicle signal: STOP")), scenario.id).toBe(true);
+      }
+    }
+  });
+
   it("records duplicate degraded-camera requests without creating another cycle", () => {
     const conditions = deriveOperatingConditions({ weather: "rain", lighting: "night", visibility: "dense-haze" });
     expect(assessCameraFallback(conditions, true).requestState).toBe("latched");
@@ -129,7 +143,8 @@ describe("deterministic crossing simulation", () => {
       for (const scenario of SCENARIOS.filter((item) => item.supportedModes.includes(mode))) {
         const result = runSimulation({ mode, scenarioId: scenario.id }, new Date("2026-08-27T00:00:00Z"));
         if (scenario.violation) {
-          expect(result.cctvEvidence).toMatchObject({ cameraId: "CCTV V2-01", detectedCondition: scenario.label, captureStage: "Detected", status: "SIMULATED_CAPTURE" });
+          expect(result.cctvEvidence).toMatchObject({ detectedCondition: scenario.label, captureStage: "Detected", status: "SIMULATED_CAPTURE" });
+          expect(result.cctvEvidence?.cameraId).toBe(result.cctvEvidence?.vehicleDirection === "Eastbound" ? "CCTV EB-01" : "CCTV WB-01");
           expect(result.cctvEvidence?.plateNumber).toMatch(/^SCV2-[NS]\d{4}$/);
           expect(result.cctvEvidence?.capturedAt).toBe(result.timeline[2].timestamp);
           expect(["Eastbound", "Westbound"]).toContain(result.cctvEvidence?.vehicleDirection);
@@ -250,7 +265,8 @@ describe("deterministic crossing simulation", () => {
     const text = new TextDecoder().decode(pdf);
     expect(text.startsWith("%PDF-1.4")).toBe(true);
     expect(text).toContain("CURRENT OCCURRENCE BRIEF");
-    expect(text).toContain("SMARTCROSS 2.2");
+    expect(text).toContain("SMARTCROSS");
+    expect(text).not.toMatch(/SMARTCROSS\s+2[.]2/);
     expect(text).toContain(result.sessionId);
     expect(text).toContain(result.cctvEvidence!.plateNumber);
     expect(text).toContain("SEVEN-STAGE OCCURRENCE");
