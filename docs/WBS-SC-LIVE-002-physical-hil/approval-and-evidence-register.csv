@@ -1,0 +1,11 @@
+Record_ID,Type,Requirement_or_Test_ID,Description,Version_or_Scope,Owner_or_Signatory,UTC_Date,Evidence_Path,SHA256,Status,Conditions_or_Expiry
+APP-01,Approval,PHIL entry,Project-owner scope and conditions,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-02,Approval,PHIL safety,Traffic-signal sequence fail-safe and stop conditions,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-03,Approval,PHIL authority,MPAJ organisational approval and constraints,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-04,Approval,Vendor interfaces,Protocol electrical timing identity and failure modes,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-05,Approval,Bench isolation,Electrical and network isolation,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-06,Approval,Cybersecurity,Identity network secrets vulnerability logging rollback,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-07,Approval,Privacy,Test data imagery ANPR access and retention,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-08,Approval,QA,Test cases evidence and independent review,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+APP-09,Approval,Configuration control,Baseline manifest bench configuration and rollback,TBD,TBD,TBD,TBD,TBD,PENDING,TBD
+EVD-001,Evidence,PHIL-TC-001..018,Physical HIL exit evidence pack,TBD,Evidence custodian,TBD,TBD,TBD,HIL_EXIT_PENDING,Generated only after authorised physical HIL

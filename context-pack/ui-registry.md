@@ -39,6 +39,7 @@ shadcn/ui registry components, extended with project-specific components.
 | CrossingView | Straight-road simulation scene | result | none | Normal and school modes |
 | EventLog | Preserved chronological record | entries, filter | none | Includes empty state |
 | Dashboard | Application shell and local workflow | none | view, scenario, history, review | One per app |
+| HeavyTrafficPanel | Peak-hour configuration, playback, metrics, audit and PDF | mode, result | validated config, controller state | Reuses CrossingView, TimelineRail and EventLog |
 | AccessForm | Demonstration credential entry | none | error, submitting | `/access` only; server API validates credentials |
 
 Check this index before creating any component; add a row when a new one is introduced.

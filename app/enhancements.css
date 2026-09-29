@@ -330,7 +330,7 @@
 .traffic-light-row { display: flex; align-items: center; gap: 5px; }
 .pedestrian-timer {
   display: grid;
-  min-width: 62px;
+  min-width: 76px;
   grid-template-columns: 1fr auto;
   gap: 1px 5px;
   padding: 5px 6px;
@@ -340,7 +340,7 @@
   background: #102b34;
   box-shadow: 0 3px 8px rgba(0, 0, 0, .3);
 }
-.pedestrian-timer small { grid-column: 1 / -1; color: #acd7de; font: 700 .38rem/1 Consolas, monospace; }
+.pedestrian-timer small { grid-column: 1 / -1; color: #acd7de; font: 700 .46rem/1.1 Consolas, monospace; }
 .pedestrian-timer strong { font-size: .58rem; }
 .pedestrian-timer b { color: #f5bd3d; font-size: .67rem; }
 .pedestrian-timer.timer-walk strong,.pedestrian-timer.timer-walk b { color: #48df9a; }
@@ -351,7 +351,7 @@
   .traffic-light-right { right: calc(50% - 126px); bottom: 3px; }
   .traffic-light-housing { padding: 3px; }
   .traffic-light .lens { width: 10px; height: 10px; }
-  .pedestrian-timer { min-width: 54px; padding: 4px; }
+  .pedestrian-timer { min-width: 68px; padding: 4px; }
   .crossing-view .car { min-width: 68px; padding: 5px 8px; }
 }
 @media (max-width: 430px) {
@@ -428,6 +428,12 @@
   box-shadow: 0 3px 10px rgba(4, 38, 48, .3);
   filter: none;
 }
+.crossing-view[data-mode="normal"] .pedestrian-icon[data-motion-state="WAITING"],
+.crossing-view[data-mode="normal"] .pedestrian-icon[data-motion-state="HOLD"],
+.crossing-view[data-mode="normal"] .pedestrian-icon[data-motion-state="PAUSED"] { top: 7% !important; }
+.crossing-view[data-mode="school"] .pedestrian-icon[data-motion-state="WAITING"],
+.crossing-view[data-mode="school"] .pedestrian-icon[data-motion-state="HOLD"],
+.crossing-view[data-mode="school"] .pedestrian-icon[data-motion-state="PAUSED"] { top: 3% !important; }
 .crossing-view .pedestrian-icon svg { width: 32px; height: 43px; }
 .crossing-view .pedestrian-icon small { position: relative; z-index: 1; }
 .vehicle-fire-icon {
@@ -516,14 +522,13 @@
 .zone-accessible { top: 18px; bottom: 18px; left: 1.5%; width: 12%; border-color: #319a72; background: rgba(49,154,114,.06); }
 .zone-accessible b { background: #167556; }
 .zone-waiting { top: 28px; left: 37%; width: 16%; height: 84px; border-color: #d9a91f; background: rgba(217,169,31,.055); }
-.zone-waiting b,.zone-parking b,.zone-context b,.zone-collection b { background: #a76d08; }
+.zone-waiting b,.zone-context b,.zone-collection b { background: #a76d08; }
 .zone-approach-left { top: 52%; left: 5%; width: 40%; height: 25%; }
 .zone-speed-left { top: 58%; left: 11%; width: 28%; height: 14%; border-style: dashed; border-color: #57bce4; }
 .zone-approach-right { top: 28%; right: 5%; width: 40%; height: 22%; }
 .zone-speed-right { top: 33%; right: 11%; width: 28%; height: 13%; border-style: dashed; border-color: #57bce4; }
 .zone-conflict { top: 26%; bottom: 18%; left: 41%; width: 18%; border-style: dashed; border-color: #ef4b52; background: rgba(239,75,82,.035); }
 .zone-conflict b { background: #b92f37; }
-.zone-parking { top: 28%; right: 14%; width: 21%; height: 18%; border-color: #dc921c; }
 .zone-context { top: 3%; right: 1.5%; width: 29%; height: 22%; border-color: #d9a91f; }
 .zone-collection { right: 14%; bottom: 3%; width: 28%; height: 18%; border-color: #d9a91f; }
 .stop-line b { top: 8px; left: 50%; transform: translateX(-50%); background: #b47a08; }
@@ -553,7 +558,6 @@
   .zone-accessible { width: 14%; }
   .zone-waiting { left: 34%; width: 21%; }
   .zone-context { width: 34%; }
-  .zone-parking { right: 8%; width: 27%; }
   .zone-collection { right: 8%; width: 34%; }
   .crossing-view[data-release="walk"][data-step="2"] .person-top { transform: none; }
   .crossing-view[data-release="walk"][data-step="3"] .person-top { transform: translateY(285px); }
@@ -713,7 +717,7 @@
   .critical-incident-banner { animation: none; }
 }
 
-/* SmartCross 2.2 simulated CCTV and plate-evidence layer. */
+/* SmartCross simulated CCTV and plate-evidence layer. */
 .cctv-camera {
   position: absolute;
   z-index: 72;
@@ -760,7 +764,7 @@
   .cctv-evidence-card dl { grid-template-columns: 1fr 1fr; }
 }
 
-/* SmartCross 2.2 presentation view. */
+/* SmartCross presentation view. */
 
 .cctv-coverage { position: absolute; z-index: 3; top: 8px; left: 8px; width: 170px; height: 145px; border: 2px dashed rgba(131,33,42,.55); border-radius: 8px 8px 100% 8px; background: repeating-linear-gradient(135deg,rgba(181,40,49,.08) 0 8px,rgba(255,255,255,.03) 8px 16px); pointer-events: none; }
 .cctv-camera { z-index: 73; }
@@ -816,6 +820,7 @@
 
 @media (max-width: 900px) {
   .topbar-actions .boundary-chip { display: none; }
+  .topbar-actions .operating-mode-chip { display: flex; }
   .countermeasure-card ol { grid-template-columns: 1fr; }
   .governance-grid { grid-template-columns: 1fr; }
 }
@@ -834,4 +839,206 @@
 
 @media (prefers-reduced-motion: reduce) {
   .rain-overlay { animation: none; }
+}
+
+.crossing-view .cctv-camera.cctv-incoming { top: 14px; bottom: auto; }
+.crossing-view .cctv-camera.cctv-outgoing { bottom: 14px; }
+.crossing-view .cctv-eastbound { left: 18px; }
+.crossing-view .cctv-westbound { right: 18px; left: auto; }
+.emergency-vehicle { position: absolute; top: 48%; transform: translate(-50%,-50%); z-index: 82; min-width: 100px; padding: 9px 12px; border: 3px solid #fecaca; border-radius: 10px; color: #fff; background: #b91c1c; text-align: center; box-shadow: 0 0 0 4px rgba(185,28,28,.2); animation: emergency-pulse 1s ease-in-out infinite; }
+.emergency-vehicle b,.emergency-vehicle small { display: block; }
+.emergency-vehicle small { font-size: .58rem; letter-spacing: .12em; }
+.emergency-warning { position: absolute; z-index: 83; top: 8px; left: 50%; transform: translateX(-50%); padding: 7px 13px; border: 2px solid #fecaca; border-radius: 999px; color: #fff; background: #7f1d1d; font-size: .68rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+@keyframes emergency-pulse { 50% { box-shadow: 0 0 0 8px rgba(185,28,28,.1); } }
+.emergency-priority-controls { display: grid; gap: 12px; margin: 14px 0; padding: 16px; border: 1px solid #e2b04d; border-left: 5px solid #c68a12; background: #fff8e8; }
+.emergency-priority-controls h3 { margin: 4px 0; color: #19353b; font-size: 1rem; }
+.emergency-priority-controls p { margin: 0; color: #5e6e70; font-size: .7rem; }
+.emergency-priority-fields { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 10px; }
+.emergency-priority-fields label { display: grid; gap: 4px; color: #334e52; font-size: .65rem; font-weight: 800; }
+.emergency-priority-fields select { min-height: 38px; padding: 7px; border: 1px solid #c8d4d0; background: #fff; }
+.emergency-priority-status { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 9px 11px; color: #fff; background: #12343d; font-size: .67rem; }
+.emergency-priority-status b { color: #ffd766; font-family: Consolas,monospace; }
+.emergency-priority-status small { flex-basis: 100%; color: #c1d6d2; }
+@media (max-width: 700px) { .emergency-priority-fields { grid-template-columns: 1fr; } .emergency-warning { max-width: 90%; overflow: hidden; text-overflow: ellipsis; } }
+
+.ht-panel { display: grid; gap: 18px; }
+.ht-panel .card { min-width: 0; }
+.ht-panel h2 { font-size: 1.25rem; }
+.ht-panel p { color: #536c72; font-size: .83rem; line-height: 1.6; }
+.ht-sequence-select { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin: 18px 0; padding: 16px; border: 1px solid #cbd9d5; background: #fff; }
+.ht-sequence-select label { font-weight: 800; }
+.ht-sequence-select select { max-width: 100%; padding: 12px; border: 1px solid #aebfbb; font-size: .85rem; }
+.ht-config { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin: 16px 0; padding: 16px; border: 1px solid #cbd9d5; }
+.ht-config label,.ht-faults label { display: grid; gap: 6px; font-size: .76rem; font-weight: 750; }
+.ht-config input,.ht-config select,.ht-faults select { min-width: 0; min-height: 42px; width: 100%; padding: 8px; border: 1px solid #aebfbb; border-radius: 6px; background: #fff; font: inherit; }
+.ht-road-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.ht-scene { overflow-x: auto; border: 1px solid #cbd9d5; }
+.ht-scene .crossing-view { min-width: 760px; }
+.ht-scene .road-lane { overflow: hidden; }
+.ht-scene .radar-zone { display: block; }
+.ht-car { position: absolute; z-index: 24; width: 5%; height: 34px; display: grid; place-content: center; text-align: center; color: #fff; background: #246c93; border: 1px solid #d6e6ed; border-radius: 7px; box-shadow: 0 3px 0 #183e55; transform: translate(-50%,-50%); transition: left 1s linear; font-size: .48rem; line-height: 1.35; }
+.ht-car small { font-size: .43rem; }
+.ht-responder { position: absolute; z-index: 26; display: grid; gap: 2px; width: 7%; padding: 5px 2px; color: #082733; background: #ffcf6b; border: 2px solid #fff; border-radius: 7px; text-align: center; transform: translate(-50%,-50%); transition: left 1s linear; font-size: .43rem; }
+.ht-queue-tail { position: absolute; z-index: 22; display: grid; max-width: 29%; gap: 2px; padding: 3px 6px; background: #092e3b; color: #fff; font-size: .45rem; }
+.ht-tail-eastbound { left: 1%; bottom: 3px; }
+.ht-tail-westbound { right: 1%; top: 3px; text-align: right; }
+.ht-obstruction { position: absolute; z-index: 48; top: 44%; left: 50%; transform: translateX(-50%); padding: 10px; color: #fff; background: #a62b21; font-size: .6rem; font-weight: 800; }
+.ht-state { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; padding: 14px; background: #092e3b; color: #fff; font-size: .82rem; }
+.ht-state strong { color: #6ef0ba; }
+.ht-metrics { width: 100%; font-size: .75rem; }
+.ht-metrics th,.ht-metrics td { padding: 12px 8px; border-bottom: 1px solid #d3ddda; text-align: left; vertical-align: top; }
+.ht-metrics small { display: block; margin-top: 4px; color: #536c72; }
+.ht-faults { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding: 14px; background: #f2f6f3; }
+.ht-faults label { max-width: 220px; }
+.ht-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.ht-summary div { padding: 12px; background: #eef6f1; }
+.ht-summary dt { font-size: .72rem; text-transform: capitalize; }
+.ht-summary dd { margin: 6px 0 0; font-size: 1rem; font-weight: 800; }
+.ht-audit .event-list { max-height: 420px; overflow-y: auto; }
+.ht-error { color: #a62b21 !important; font-weight: 700; }
+@media (max-width: 900px) { .ht-config,.ht-summary { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 500px) { .ht-config { grid-template-columns: 1fr; } .ht-road-controls .button { flex: 1 1 45%; } .ht-sequence-select select { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .ht-car,.ht-responder { transition: none; } }
+
+/* Directional 40 m radar and CCTV monitoring refinement. */
+.crossing-view { --top-pavement-height: 126px; --bottom-pavement-height: 86px; }
+.crossing-view[data-mode="school"] { --top-pavement-height: 126px; }
+.crossing-view .zone-speed {
+  width: auto;
+  height: 68px;
+  border-color: rgba(87,188,228,.9);
+  border-style: dashed;
+  background: rgba(87,188,228,.055);
+}
+.crossing-view .zone-speed-eastbound {
+  top: auto;
+  right: calc(50% + 93px);
+  bottom: calc(var(--bottom-pavement-height) + 22px);
+  left: 8%;
+}
+.crossing-view .zone-speed-westbound {
+  top: calc(var(--top-pavement-height) + 22px);
+  right: 8%;
+  bottom: auto;
+  left: calc(50% + 93px);
+}
+/* Mirror the eastbound rectangle across the roadway midpoint: both zones
+   have the same size and inset from their respective pavement edges. */
+.crossing-view .zone-speed > b {
+  top: -18px;
+  left: 0;
+  padding: 3px 6px;
+  color: #fff;
+  background: #176b8a;
+}
+.speed-zone-segments {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  align-items: end;
+}
+.zone-speed-westbound .speed-zone-segments { direction: rtl; }
+.speed-zone-segments i {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 3px 4px;
+  border-inline-end: 1px dashed rgba(193,231,243,.58);
+  color: rgba(230,247,251,.9);
+  font: 750 .42rem/1 Consolas,monospace;
+  font-style: normal;
+  white-space: nowrap;
+}
+.speed-zone-segments i:last-child { border-inline-end: 0; }
+.crossing-view .cctv-camera {
+  top: auto;
+  bottom: 18px;
+  max-width: 142px;
+  padding: 5px 7px;
+  gap: 5px;
+}
+.crossing-view .cctv-camera small { color: #51696d; font: 750 .42rem/1 Consolas,monospace; white-space: nowrap; }
+.crossing-view .cctv-camera.cctv-active small { color: #fff; }
+.crossing-view .cctv-camera.cctv-eastbound.cctv-incoming { left: 18px; right: auto; top: 14px; bottom: auto; }
+.crossing-view .cctv-camera.cctv-eastbound.cctv-outgoing { left: auto; right: 18px; top: auto; bottom: 14px; }
+.crossing-view .cctv-camera.cctv-westbound.cctv-incoming { left: auto; right: 18px; top: 14px; bottom: auto; }
+.crossing-view .cctv-camera.cctv-westbound.cctv-outgoing { left: 18px; right: auto; top: auto; bottom: 14px; }
+.crossing-view .cctv-eastbound { left: 18px; right: auto; }
+.crossing-view .cctv-westbound { right: 18px; left: auto; }
+.crossing-view .cctv-eastbound span { transform: rotate(-8deg); }
+.crossing-view .cctv-westbound span { transform: rotate(188deg); }
+.crossing-view .cctv-coverage {
+  top: auto;
+  bottom: var(--bottom-pavement-height);
+  width: 34%;
+  height: 138px;
+  border: 1px dashed rgba(131,33,42,.38);
+  border-radius: 0;
+  background: linear-gradient(to top,rgba(181,40,49,.07),transparent 76%);
+  clip-path: polygon(0 100%,100% 16%,100% 100%);
+}
+.crossing-view .cctv-coverage-eastbound { left: 3%; }
+.crossing-view .cctv-coverage-westbound { right: 3%; left: auto; transform: scaleX(-1); }
+.cctv-range-badge {
+  position: absolute;
+  z-index: 8;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 9px;
+  border: 1px solid #2a7993;
+  border-radius: 999px;
+  color: #e8fbff;
+  background: rgba(7,39,51,.92);
+  font: 800 .48rem/1 Consolas,monospace;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.simulation-command-bar {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-top: 1px solid #cbd9d5;
+  border-bottom: 1px solid #cbd9d5;
+  background: #f2f8f5;
+}
+.simulation-command-select { min-width: 0; display: grid; grid-template-columns: minmax(190px,.72fr) minmax(220px,1.28fr); align-items: center; gap: 4px 12px; }
+.simulation-command-select .eyebrow { grid-column: 1 / -1; font-size: .5rem; }
+.simulation-command-select label { color: #16353d; font-size: .7rem; font-weight: 850; }
+.simulation-command-select select { min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid #aebfbb; border-radius: 7px; color: #15363e; background: #fff; font-size: .78rem; }
+.simulation-command-select small { grid-column: 2; overflow: hidden; color: #607174; font-size: .6rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.simulation-command-actions { display: flex; align-items: center; gap: 8px; }
+.simulation-command-actions .button { min-height: 42px; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .simulation-command-bar { grid-template-columns: 1fr; align-items: stretch; }
+  .simulation-command-actions .button { flex: 1; }
+}
+
+@media (max-width: 700px) {
+  .crossing-view { --top-pavement-height: 106px; --bottom-pavement-height: 72px; }
+  .crossing-view[data-mode="school"] { --top-pavement-height: 106px; }
+  .crossing-view .zone-speed { height: 54px; }
+  .crossing-view .zone-speed-eastbound { right: 63%; bottom: calc(var(--bottom-pavement-height) + 16px); left: 3%; }
+  .crossing-view .zone-speed-westbound { top: calc(var(--top-pavement-height) + 16px); right: 3%; left: 63%; }
+  .crossing-view .zone-speed > b { top: -14px; max-width: 100%; overflow: hidden; font-size: .32rem; text-overflow: ellipsis; }
+  .speed-zone-segments i { font-size: .3rem; }
+  .crossing-view .cctv-camera { bottom: 8px; max-width: 116px; padding: 4px 5px; font-size: .4rem; }
+  .crossing-view .cctv-camera small { display: none; }
+  .crossing-view .cctv-eastbound { left: 8px; }
+  .crossing-view .cctv-westbound { right: 8px; }
+  .crossing-view .cctv-camera.cctv-eastbound.cctv-incoming { left: 8px; right: auto; top: 8px; }
+  .crossing-view .cctv-camera.cctv-eastbound.cctv-outgoing { left: auto; right: 8px; bottom: 8px; }
+  .crossing-view .cctv-camera.cctv-westbound.cctv-incoming { left: auto; right: 8px; top: 8px; }
+  .crossing-view .cctv-camera.cctv-westbound.cctv-outgoing { left: 8px; right: auto; bottom: 8px; }
+  .crossing-view .cctv-coverage { height: 105px; }
+  .cctv-range-badge { top: 4px; max-width: 80%; overflow: hidden; font-size: .4rem; text-overflow: ellipsis; }
+  .simulation-command-select { grid-template-columns: 1fr; }
+  .simulation-command-select .eyebrow,.simulation-command-select small { grid-column: 1; }
+  .simulation-command-select small { white-space: normal; }
+  .simulation-command-actions { align-items: stretch; flex-direction: column; }
 }

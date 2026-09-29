@@ -1,0 +1,26 @@
+import { describe, expect, it } from "vitest";
+import { AdapterIdentityRegistry, InMemoryReplayAdapter, ReplayIdentityError, verifyReplayIdentityRejection, type FieldObservation } from "@/lib/live-integration/adapters";
+
+const now = new Date("2026-09-24T06:00:00.000Z");
+const context = { now, staleAfterMs: 2_000 };
+const configuration = (deviceId = "RADAR-DEVICE-01", sourceId = "RADAR-01") => ({ deviceId, sourceId, kind: "VEHICLE_RADAR" as const, interfaceId: "REPLAY-CHANNEL-01" });
+const registry = (deviceId = "RADAR-DEVICE-01", sourceId = "RADAR-01") => new AdapterIdentityRegistry([configuration(deviceId, sourceId)]);
+function observation(sourceId = "RADAR-01", overrides: Partial<FieldObservation<unknown>> = {}): FieldObservation<unknown> {
+  return { schemaVersion: "1.0", deviceId: "RADAR-DEVICE-01", sourceId, kind: "VEHICLE_RADAR", observedAt: now.toISOString(), receivedAt: now.toISOString(), sequence: 1, confidence: 0.99, health: "OPERATIONAL", value: { direction: "Eastbound", speedKmh: 0, vehiclePresent: false, queueVehicles: 0 }, ...overrides } as FieldObservation<unknown>;
+}
+async function rejection(value: FieldObservation<unknown>, adapterSource = "RADAR-01") {
+  const adapter = new InMemoryReplayAdapter(registry(), adapterSource, [value]); await adapter.connect();
+  try { await adapter.read(context); throw new Error("Expected identity rejection."); } catch (error) { expect(error).toBeInstanceOf(ReplayIdentityError); const record = (error as ReplayIdentityError).rejection; expect(record.safeResponse).toEqual({ eastbound: "STOP", westbound: "STOP", pedestrian: "WAIT" }); expect(record.claimedIdentity.deviceId).toBe(value.deviceId); expect(verifyReplayIdentityRejection(record)).toBe(true); return record; }
+}
+
+describe("InMemoryReplayAdapter approved identity boundary", () => {
+  it("accepts an exact registered device, source, kind and schema", async () => { const adapter = new InMemoryReplayAdapter(registry(), "RADAR-01", [observation()]); await adapter.connect(); expect((await adapter.read(context)).deviceId).toBe("RADAR-DEVICE-01"); expect(Object.isFrozen(adapter.identity)).toBe(true); });
+  it.each([["unknown source", "RADAR-UNKNOWN"], ["missing source", undefined], ["empty source", ""], ["whitespace source", "   "], ["case variant", "radar-01"], ["oversized source", `RADAR-${"A".repeat(65)}`], ["invalid characters", "RADAR_01"]])("rejects %s", async (_name, sourceId) => { expect((await rejection(observation("RADAR-01", { sourceId: sourceId as string }))).code).toBe("SOURCE_IDENTITY_MISMATCH"); });
+  it.each([["missing device", undefined], ["wrong device", "RADAR-DEVICE-02"], ["case-variant device", "radar-device-01"]])("rejects %s", async (_name, deviceId) => { expect((await rejection(observation("RADAR-01", { deviceId: deviceId as string }))).code).toBe("SOURCE_IDENTITY_MISMATCH"); });
+  it("rejects kind and schema mismatches before payload use", async () => { await rejection(observation("RADAR-01", { kind: "PEDESTRIAN_SENSOR", value: { demand: false, crossingOccupied: false } })); await rejection(observation("RADAR-01", { schemaVersion: "2.0" as "1.0" })); });
+  it("rejects a correct observation replayed through the wrong adapter", async () => { const approved = new AdapterIdentityRegistry([configuration(), configuration("RADAR-DEVICE-02", "RADAR-02")]); const adapter = new InMemoryReplayAdapter(approved, "RADAR-02", [observation()]); await adapter.connect(); await expect(adapter.read(context)).rejects.toMatchObject({ rejection: { code: "SOURCE_IDENTITY_MISMATCH", safeResponse: { pedestrian: "WAIT" } } }); });
+  it("rejects conflicting duplicate source registrations", () => { expect(() => new AdapterIdentityRegistry([configuration("RADAR-DEVICE-01", "RADAR-01"), configuration("RADAR-DEVICE-02", "RADAR-01")])).toThrow(/DUPLICATE_SOURCE_REGISTRATION: RADAR-01/); });
+  it("keeps two unique registered sources independent", async () => { const approved = new AdapterIdentityRegistry([configuration(), configuration("RADAR-DEVICE-02", "RADAR-02")]); const a = new InMemoryReplayAdapter(approved, "RADAR-01", [observation("RADAR-01", { sequence: 7 })]); const b = new InMemoryReplayAdapter(approved, "RADAR-02", [observation("RADAR-02", { deviceId: "RADAR-DEVICE-02", sequence: 7 })]); await a.connect(); await b.connect(); expect((await a.read(context)).sequence).toBe(7); expect((await b.read(context)).sequence).toBe(7); });
+  it("rejects configured-identity mutation and prototype-shaped input", async () => { const adapter = new InMemoryReplayAdapter(registry(), "RADAR-01", [observation()]); expect(() => Object.assign(adapter.identity, { sourceId: "RADAR-02" })).toThrow(); const unsafe = observation() as unknown as Record<string, unknown>; Object.setPrototypeOf(unsafe, { deviceId: "RADAR-DEVICE-02" }); expect((await rejection(unsafe as unknown as FieldObservation<unknown>)).code).toBe("PROTOTYPE_PROPERTY_REJECTED"); });
+  it("accepts a valid observation after a rejected identity", async () => { await rejection(observation("RADAR-01", { deviceId: "RADAR-DEVICE-02" })); const adapter = new InMemoryReplayAdapter(registry(), "RADAR-01", [observation()]); await adapter.connect(); expect((await adapter.read(context)).sourceId).toBe("RADAR-01"); });
+});

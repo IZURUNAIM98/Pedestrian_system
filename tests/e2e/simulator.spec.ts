@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { loadLocalAuthEnvironment } from "../load-local-auth-env";
+
+loadLocalAuthEnvironment();
 
 const VIOLATION_PROFILES = [
   ["failure-to-stop-or-give-way", "conflict"],
@@ -24,9 +27,12 @@ const VIOLATION_PROFILES = [
 ] as const;
 
 async function login(page: import("@playwright/test").Page) {
+  const id = process.env.DEMO_ACCESS_ID;
+  const password = process.env.DEMO_ACCESS_PASSWORD;
+  if (!id || !password) throw new Error("Demonstration credentials are not configured for browser verification.");
   await page.goto("/access");
-  await page.getByLabel("Operator ID").fill("ENNOVA");
-  await page.getByLabel("Password").fill("123456");
+  await page.getByLabel("Operator ID").fill(id);
+  await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in securely" }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/smartcross-2-2");
@@ -40,23 +46,31 @@ async function expectCleanEnglishCopy(page: import("@playwright/test").Page) {
   expect(copy).not.toMatch(/\b(?:Vehicle|Motorcycle|STOP LINE) [AB]\s*[:\u0028\u0029\u00b7\u2190\u2192\u2013\u2014]/u);
 }
 
-test("serves the SmartCross 2.2 dashboard and simulation API publicly", async ({ page }) => {
+test("requires authorised access for the SmartCross dashboard and simulation API", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.locator(".brand-copy strong")).toHaveText("SmartCross 2.2");
-  await expect(page.getByText("Public demonstration. Supervised simulation.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Log out" })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/access$/);
+  await expect(page.getByRole("heading", { name: "Sign in to the simulator" })).toBeVisible();
 
-  const response = await page.request.post("/api/simulate", {
+  const anonymousResponse = await page.request.post("/api/simulate", {
     data: { mode: "normal", scenarioId: "normal-no-violation" },
   });
-  expect(response.ok()).toBe(true);
+  expect(anonymousResponse.status()).toBe(401);
+
+  await login(page);
+  await expect(page.locator(".brand-copy strong")).toHaveText("SmartCross");
+  await expect(page.locator(".supervised-label")).toHaveText("Authorised demonstration. Supervised simulation.");
+  await expect(page.getByRole("button", { name: "Log out" })).toBeVisible();
+
+  const authorisedResponse = await page.request.post("/api/simulate", {
+    data: { mode: "normal", scenarioId: "normal-no-violation" },
+  });
+  expect(authorisedResponse.ok()).toBe(true);
 });
 
 test("uses clear English copy across every page section", async ({ page }) => {
   await login(page);
-  await expect(page).toHaveTitle("SmartCross 2.2");
-  await expect(page.locator(".brand-copy strong")).toHaveText("SmartCross 2.2");
+  await expect(page).toHaveTitle("SmartCross");
+  await expect(page.locator(".brand-copy strong")).toHaveText("SmartCross");
   await expect(page.locator(".brand-copy")).not.toContainText("Lintas AI");
 
   await expect(page.getByRole("button", { name: "Accessibility", exact: true })).toHaveCount(0);
@@ -166,8 +180,12 @@ test("applies adverse operating conditions and keeps ANPR stage-gated", async ({
   await expect(page.getByText("Total violations").locator("..").getByText("0", { exact: true })).toBeVisible();
   await expect(page.getByText("Unconfirmed low-confidence events").locator("..").getByText("1", { exact: true })).toBeVisible();
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "4", { timeout: 8_000 });
-  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Vehicle signal STOP. Pedestrian signal WAIT/);
-  await expect(page.locator(".person-top")).toHaveAttribute("data-motion-state", "HOLD");
+  await expect(page.locator(".crossing-view")).toHaveAttribute("data-fallback-controller", "fixed-timing");
+  await expect(page.locator(".crossing-view")).toHaveAttribute("data-motion-profile", "no-violation");
+  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Eastbound signal STOP; Westbound signal STOP. Pedestrian signal WALK/);
+  await expect(page.locator(".person-top")).toHaveAttribute("data-motion-state", "WALKING");
+  await expect(page.getByText("AI input bypassed. Button-initiated fixed traffic control is active.")).toBeVisible();
+  await expect(page.getByTestId("authoritative-decision")).toContainText("PEDESTRIAN_SERVICE");
   const statusOverlaps = await page.locator(".road-scene").evaluate((scene) => {
     const selectors = [".cctv-camera", ".scene-plate-capture", ".sensor-health-status", ".violation-marker"];
     const boxes = selectors.map((selector) => scene.querySelector(selector)?.getBoundingClientRect()).filter(Boolean) as DOMRect[];
@@ -183,7 +201,7 @@ test("keeps a wheelchair user held while the accessible route remains blocked", 
   await page.getByRole("button", { name: "Run seven-stage simulation" }).click();
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "2", { timeout: 8_000 });
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-effect", "accessible-blocked");
-  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Vehicle signal STOP. Pedestrian signal WAIT/);
+  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Eastbound signal STOP; Westbound signal STOP. Pedestrian signal WAIT/);
   await expect(page.getByRole("img", { name: /Wheelchair user: hold/ })).toBeVisible();
   await expect(page.locator(".vehicle-a .vehicle-stop-indicator")).toHaveText("STOP");
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-route-clear", "false");
@@ -288,9 +306,14 @@ test("stages violation 19 traffic-light collision before the alarm and impact ci
   }
 });
 
-test("keeps the reference engineering zones, paired signals and foreground pedestrian", async ({ page }) => {
+test("keeps symmetrical 40 metre monitoring, paired signals and foreground pedestrian", async ({ page }) => {
   await login(page);
   await expect(page.locator(".engineering-zone")).toHaveCount(4);
+  await expect(page.locator('.zone-speed[data-range-meters="40"]')).toHaveCount(2);
+  await expect(page.locator('.zone-speed[data-direction="eastbound"] b')).toHaveText("EASTBOUND SPEED DETECTION - 40 m");
+  await expect(page.locator('.zone-speed[data-direction="westbound"] b')).toHaveText("WESTBOUND SPEED DETECTION - 40 m");
+  await expect(page.getByRole("img", { name: /CCTV EB-01/ })).toBeVisible();
+  await expect(page.getByRole("img", { name: /CCTV WB-01/ })).toBeVisible();
   await expect(page.locator(".traffic-light")).toHaveCount(2);
   await expect(page.locator(".motion-vehicle")).toHaveCount(2);
   await expect(page.locator(".vehicle-start-marker")).toHaveCount(0);
@@ -300,22 +323,36 @@ test("keeps the reference engineering zones, paired signals and foreground pedes
   expect(hasStartMarkerStyleRule).toBe(false);
   await expect(page.locator(".vehicle-a")).toHaveAttribute("style", /left:\s*8%/);
   await expect(page.locator(".vehicle-b")).toHaveAttribute("style", /left:\s*92%/);
+  await expect(page.locator(".vehicle-a")).toHaveAttribute("data-distance-to-centre", "42");
+  await expect(page.locator(".vehicle-b")).toHaveAttribute("data-distance-to-centre", "42");
+  await expect(page.locator(".vehicle-a")).toHaveAttribute("data-monitoring-state", "start-buffer");
+  await expect(page.locator(".vehicle-b")).toHaveAttribute("data-monitoring-state", "start-buffer");
   await page.getByRole("button", { name: "School" }).click();
   await expect(page.locator(".vehicle-start-marker")).toHaveCount(0);
   await expect(page.locator(".vehicle-a")).toHaveAttribute("style", /left:\s*8%/);
   await expect(page.locator(".vehicle-b")).toHaveAttribute("style", /left:\s*92%/);
-  await page.getByLabel(/Crossing condition/).selectOption("school-failure-to-stop-or-give-way");
+  await page.locator("#scenario-select").selectOption("school-failure-to-stop-or-give-way");
   await expect(page.locator(".vehicle-start-marker")).toHaveCount(0);
   await expect(page.locator(".pedestrian-timer")).toHaveCount(2);
-  await expect(page.locator(".zone-speed-left b")).toHaveText("Speed measurement");
   await expect(page.locator(".zone-conflict b")).toHaveText("Conflict zone");
   const geometry = await page.evaluate(() => {
     const pedestrian = document.querySelector(".person-top");
     const zebra = document.querySelector(".zebra");
-    if (!pedestrian || !zebra) return false;
-    return Number.parseInt(getComputedStyle(pedestrian).zIndex, 10) > Number.parseInt(getComputedStyle(zebra).zIndex, 10);
+    const eastbound = document.querySelector(".zone-speed-eastbound")?.getBoundingClientRect();
+    const westbound = document.querySelector(".zone-speed-westbound")?.getBoundingClientRect();
+    if (!pedestrian || !zebra || !eastbound || !westbound) return { foreground: false, mirroredZones: false };
+    return {
+      foreground: Number.parseInt(getComputedStyle(pedestrian).zIndex, 10) > Number.parseInt(getComputedStyle(zebra).zIndex, 10),
+      mirroredZones: Math.abs(eastbound.width - westbound.width) < 2 && Math.abs(eastbound.height - westbound.height) < 2,
+    };
   });
-  expect(geometry).toBe(true);
+  expect(geometry).toEqual({ foreground: true, mirroredZones: true });
+  const sceneBox = await page.locator(".crossing-view").boundingBox();
+  const commandBox = await page.locator(".simulation-command-bar").boundingBox();
+  expect(sceneBox).not.toBeNull();
+  expect(commandBox).not.toBeNull();
+  expect(commandBox!.y).toBeGreaterThanOrEqual(sceneBox!.y + sceneBox!.height - 2);
+  await expect(page.getByRole("button", { name: "Run seven-stage simulation" })).toBeVisible();
 });
 
 test("uses one pedestrian for Normal mode and a compact student group for School mode", async ({ page }, testInfo) => {
@@ -324,6 +361,11 @@ test("uses one pedestrian for Normal mode and a compact student group for School
   const normalIcon = page.locator(".pedestrian-icon > svg");
   await expect(normalIcon).toHaveCount(1);
   const normalBox = await normalIcon.boundingBox();
+  const normalWaitingBox = await page.locator(".pedestrian-icon").boundingBox();
+  const normalZebraBox = await page.locator(".zebra").boundingBox();
+  expect(normalWaitingBox).not.toBeNull();
+  expect(normalZebraBox).not.toBeNull();
+  expect(normalWaitingBox!.y + normalWaitingBox!.height).toBeLessThanOrEqual(normalZebraBox!.y - 4);
   await expect(page.locator(".student-group")).toHaveCount(0);
 
   await page.getByRole("button", { name: "School" }).click();
@@ -352,6 +394,26 @@ test("uses one pedestrian for Normal mode and a compact student group for School
   await expect(studentGroup).toHaveAttribute("aria-label", /Student group: completed/);
   expect(await studentGroup.evaluate((element) => (element as HTMLElement).style.top)).not.toBe(startTop);
   await page.screenshot({ path: `tmp/school-student-group-${testInfo.project.name}.png`, fullPage: true });
+});
+
+test("does not let either crossing mode enter the zebra before WALK", async ({ page }) => {
+  await login(page);
+
+  for (const mode of ["normal", "school"] as const) {
+    if (mode === "school") await page.getByRole("button", { name: "School" }).click();
+    await page.getByLabel(/Crossing condition/).selectOption(`${mode}-motorcycle-in-pedestrian-area`);
+    await page.getByRole("button", { name: "Run seven-stage simulation" }).click();
+    await page.waitForFunction(({ expectedTop }) => {
+      const crossing = document.querySelector(".crossing-view");
+      const pedestrian = document.querySelector<HTMLElement>(".pedestrian-icon");
+      const zebra = document.querySelector<HTMLElement>(".zebra");
+      if (!crossing || !pedestrian || !zebra || crossing.getAttribute("data-frame") !== "1") return false;
+      const pedestrianBox = pedestrian.getBoundingClientRect();
+      const zebraBox = zebra.getBoundingClientRect();
+      return pedestrian.style.top.replace(" ", "") === expectedTop && pedestrianBox.bottom <= zebraBox.top - 4;
+    }, { expectedTop: `${mode === "school" ? "3" : "7"}%` });
+    await page.reload();
+  }
 });
 
 test("uses uninterrupted linear pedestrian motion in Normal and School crossings", async ({ page }) => {
@@ -414,9 +476,9 @@ test("keeps traffic stopped until the pedestrian clears, then releases vehicles 
   await login(page);
   await page.getByRole("button", { name: "Run seven-stage simulation" }).click();
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "2");
-  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Vehicle signal STOP. Pedestrian signal WAIT/);
+  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Eastbound signal STOP; Westbound signal STOP. Pedestrian signal WAIT/);
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "4", { timeout: 8_000 });
-  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Vehicle signal STOP. Pedestrian signal WALK/);
+  await expect(page.locator(".crossing-view")).toHaveAttribute("aria-label", /Eastbound signal STOP; Westbound signal STOP. Pedestrian signal WALK/);
   await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "5", { timeout: 8_000 });
   await expect(page.locator(".vehicle-a")).toHaveAttribute("data-motion-state", "YIELDING");
   await expect(page.locator(".vehicle-b")).toHaveAttribute("data-motion-state", "YIELDING");
@@ -468,6 +530,32 @@ test("clears the seven-action local violation event log", async ({ page }) => {
   await page.getByRole("button", { name: "Clear log" }).click();
   await expect(page.getByText("No violation events recorded")).toBeVisible();
   await expect(page.getByRole("button", { name: "Clear log" })).toBeDisabled();
+});
+
+test("presents operator cards by default and retains the full technical record", async ({ page }) => {
+  await login(page);
+  await page.getByLabel(/Crossing condition/).selectOption("normal-red-signal-violation");
+  await page.getByRole("button", { name: "Run seven-stage simulation" }).click();
+  await expect(page.locator(".crossing-view")).toHaveAttribute("data-frame", "6", { timeout: 12_000 });
+  await expect(page.getByRole("button", { name: "Operator View" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".operator-event-card")).toHaveCount(7);
+  await expect(page.locator(".operator-event-card").first()).toContainText("What happened");
+  await expect(page.locator(".operator-event-card").first()).toContainText("SmartCross response");
+  await expect(page.locator(".operator-event-card").first()).toContainText("Operator action");
+  await page.getByRole("button", { name: "Violation", exact: true }).click();
+  await expect(page.locator(".operator-event-card").first()).toContainText("Traffic Violation");
+  await page.getByRole("button", { name: "All", exact: true }).click();
+  await page.getByRole("button", { name: "Technical View" }).click();
+  await expect(page.locator(".technical-event-list li")).toHaveCount(7);
+  await expect(page.locator(".technical-event-list")).toContainText("Vehicle A is");
+});
+
+test("prominently identifies the non-actuating operating mode", async ({ page }) => {
+  await login(page);
+  const mode = page.getByRole("status", { name: "Operating mode: Simulation" });
+  await expect(mode).toBeVisible();
+  await expect(mode).toContainText("SIMULATION");
+  await expect(mode).toContainText("No actuation");
 });
 
 test("reset cancels playback, preserves history and allows deterministic replay", async ({ page }) => {
@@ -643,7 +731,7 @@ test("captures synthetic CCTV plate evidence for Normal and School violations", 
   }
 });
 
-test("shows SmartCross 2.2 traceable evidence and current-session statistics without a map legend", async ({ page }, testInfo) => {
+test("shows SmartCross traceable evidence and current-session statistics without a map legend", async ({ page }, testInfo) => {
   await login(page);
   await expect(page.getByRole("region", { name: "Map legend" })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Simulated violation counters" })).toBeVisible();

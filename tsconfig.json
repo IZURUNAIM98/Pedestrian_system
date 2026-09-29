@@ -37,6 +37,9 @@
   ],
   "exclude": [
     "node_modules",
-    "tmp"
+    "tmp",
+    "outputs",
+    ".artifact_runtime",
+    "backup Rev 2"
   ]
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { TimelineStage } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 
-export function TimelineRail({ stages, activeIndex = 0 }: { stages: TimelineStage[]; activeIndex?: number }) {
+export function TimelineRail({ stages, activeIndex = 0 }: { stages: Array<Omit<TimelineStage, 'name'> & {name:string}>; activeIndex?: number }) {
   const [selected, setSelected] = useState(0);
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 

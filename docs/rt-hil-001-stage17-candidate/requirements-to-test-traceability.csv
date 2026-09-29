@@ -1,0 +1,15 @@
+requirement,test_id,evidence,result
+Complete accepted/rejected receipt provenance,RT001-CV-003,tests/rt-hil-001-closure-deficiencies.test.ts hash-protects receivedAt,PASS
+Canonical equivalent-set ordering,RT001-CV-001,tests/rt-hil-001-closure-deficiencies.test.ts canonicalises arrival orders,PASS
+Equal and near-equal timestamp ordering,RT001-CV-002,tests/rt-hil-001-closure-deficiencies.test.ts timestamp tie breakers,PASS
+Schema version rejection,RT001-CV-004,tests/rt-hil-001-closure-deficiencies.test.ts parameterised envelope cases,PASS
+Non-finite numeric rejection,RT001-CV-005,tests/rt-hil-001-closure-deficiencies.test.ts NaN and infinities,PASS
+Unknown-field rejection,RT001-CV-006,tests/rt-hil-001-closure-deficiencies.test.ts top-level and nested fields,PASS
+Identifier validation and kind binding,RT001-CV-007,tests/rt-hil-001-closure-deficiencies.test.ts identifier matrix and source-kind mismatch,PASS
+Camera/radar disagreement,RT001-CV-008,tests/rt-hil-001-closure-deficiencies.test.ts camera/radar conflict,PASS
+Sequence/time fail closed,RT001-CV-009,tests/rt-hil-001-closure-deficiencies.test.ts duplicate reordered stale receipt timing,PASS
+Injection variants,RT001-CV-010,tests/rt-hil-001-closure-deficiencies.test.ts direct nested prototype constructor cases,PASS
+Alternate entry-point resistance,RT001-CV-011,tests/rt-hil-001-closure-deficiencies.test.ts forged shadow and adapter identity,PASS
+Rejected batch does not poison valid input,RT001-CV-012,tests/rt-hil-001-closure-deficiencies.test.ts valid after rejected input,PASS
+Valid authorised service remains possible,RT001-CV-013,tests/rt-hil-001-closure-deficiencies.test.ts valid input produces protected WALK,PASS
+Original independent assessment,RT001-EV-001,docs/rt-hil-001-stage17-candidate/original-assessment-evidence-status.md,MISSING

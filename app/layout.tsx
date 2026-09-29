@@ -3,7 +3,7 @@ import "./globals.css";
 import "./enhancements.css";
 
 export const metadata: Metadata = {
-  title: "SmartCross 2.2",
+  title: "SmartCross",
   description: "Public simulation-only smart pedestrian-crossing prototype for Ampang Jaya.",
 };
 

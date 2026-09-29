@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { JSON_UTF8_CONTENT_TYPE } from "@/lib/text-standard";
 import { Button } from "@/components/ui/button";
 
-export function AccessForm() {
+export function AccessForm({ initialError = "" }: { initialError?: string }) {
   const router = useRouter();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -37,16 +37,16 @@ export function AccessForm() {
   }
 
   return (
-    <form className="access-form" onSubmit={submit} noValidate>
+    <form className="access-form" method="post" action="/api/login" onSubmit={submit}>
       <div className="access-field">
         <label htmlFor="access-id">Operator ID</label>
-        <input id="access-id" name="id" autoComplete="username" required autoFocus />
+        <input id="access-id" name="id" autoComplete="username" required aria-required="true" aria-describedby="access-helper" autoFocus />
       </div>
       <div className="access-field">
         <label htmlFor="access-password">Password</label>
-        <input id="access-password" name="password" type="password" autoComplete="current-password" required />
+        <input id="access-password" name="password" type="password" autoComplete="current-password" required aria-required="true" aria-describedby="access-helper" />
       </div>
-      {error ? <div className="login-error" role="alert">{error}</div> : <div className="access-helper">Use the authorised demonstration credentials supplied by the project owner.</div>}
+      {error ? <div className="login-error" role="alert">{error}</div> : <div id="access-helper" className="access-helper">Both fields are required. Use the authorised demonstration credentials supplied by the project owner.</div>}
       <Button type="submit" disabled={submitting}>{submitting ? "Signing in…" : "Sign in securely"}</Button>
     </form>
   );

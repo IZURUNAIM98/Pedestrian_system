@@ -22,3 +22,6 @@ components/phase-two-*.tsx
 components/phase-two-*.css
 tests/e2e/phase-two.spec.ts
 scripts/phase-two-visual-check.mjs
+
+.vercel
+.env*

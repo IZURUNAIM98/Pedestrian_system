@@ -74,6 +74,12 @@ Critical simulations create a local incident requiring human confirmation. Event
 - ANPR remains inactive for no-violation runs. For a violation, synthetic evidence activates at the `Detected` stage only and never queries a live vehicle database.
 - Notification recipients exist only as contextual local mock-queue records for critical collision or fire scenarios. No external message is transmitted.
 
+### Peak-Hour Heavy Traffic (browser memory only)
+
+`HeavyTrafficConfig` stores directional peak arrivals (vehicles/minute), pedestrian interval, initial queue, sensor health (`operational`, `redundant`, `failed`), optional emergency direction/time, persistence/cooldown periods, queue thresholds and bounded green/amber/all-red/walk/clearance/wait timings. Zod validates configuration and timing relationships before start.
+
+`HeavyTrafficState` records simulation time, mode, signal phase, independent direction metrics, persistent vehicle IDs/positions/speeds, latched pedestrian demand, crossing occupancy, emergency record, seven-stage observations and audit entries. Audit entries include timestamp, direction, evidence, action, safety rule and result. Queue length includes an explicitly estimated upstream portion beyond the 40 m immediate monitoring area. All inputs and confidence are simulated. Summary records initial/maximum/final queue, processed vehicles, delay, pedestrian service, emergency events, holds, violations and stabilisation time. No field measurements or persistence are introduced.
+
 ## Relationships
 - Crossing has many Detection Event
 - Crossing has many Traffic Violation

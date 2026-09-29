@@ -23,9 +23,9 @@ for (const [file, expected] of Object.entries(manifest.files)) {
 }
 
 if (failures.length > 0) {
-  console.error("SmartCross 2.2 repository lock failed:\n" + failures.map((failure) => `- ${failure}`).join("\n"));
+  console.error("SmartCross repository lock failed:\n" + failures.map((failure) => `- ${failure}`).join("\n"));
   console.error("Review every change before intentionally refreshing smartcross-2.2.lock.json.");
   process.exit(1);
 }
 
-console.log(`SmartCross 2.2 repository lock verified (${Object.keys(manifest.files).length} files).`);
+console.log(`SmartCross repository lock verified (${Object.keys(manifest.files).length} files).`);

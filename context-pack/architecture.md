@@ -130,6 +130,10 @@ Rules:
 Additional notes: Use TypeScript, Next.js, React, Tailwind CSS, and responsive desktop/mobile layouts. The MVP must run in simulation-only mode using local mock data. Do not require live CCTV, IoT sensors, cloud APIs, MPAJ systems, emergency services, or physical traffic lights. Keep secrets in environment variables and never expose them in frontend code. Use PostgreSQL and Prisma only when persistent storage is required. Deploy the prototype to Vercel after local testing and safety validation.
 
 ## Security Considerations
+
+### Peak-hour simulation configuration
+
+Browser-only `HeavyTrafficConfig` is validated by Zod at start. Defaults and presets live in `lib/heavy-traffic.ts`; no environment variables or live integrations are added. One simulation second equals one wall-clock second during playback. Timing defaults are provisional: green 8-20 s, amber 3 s, all-red 2 s, WALK 15 s, pedestrian clearance 3 s, maximum ordinary request wait 40 s. WAIT visibly reaches zero before a separately labelled amber/all-red safety transition; WALK then starts a new full countdown at 15 and reaches zero before clearance. Crossing occupancy and emergency/critical holds override release; unmet waiting limits under these holds are explicitly audited. Queues beyond the 40 m immediate monitoring area are simulated upstream estimates. One controller drives both signal heads, road actors, countdowns, timeline, audit evidence and PDF export. Existing violation/emergency flows remain independent selectable sequences.
 - Escape/encode all user-supplied content rendered in the UI (XSS).
 - Decide the authentication story before building protected features; enforce authorization on the server, never only in the UI.
 - If sessions are introduced, use HTTPS-only cookies and standard session hardening.

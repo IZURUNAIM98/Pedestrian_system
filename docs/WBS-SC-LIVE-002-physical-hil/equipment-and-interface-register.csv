@@ -1,0 +1,13 @@
+Record_ID,Asset_or_Interface,Manufacturer,Model,Hardware_Revision,Firmware_or_Software,Serial_or_Asset_ID,Protocol_or_Interface,Calibration_or_Certificate,Isolation_Method,Safe_State,Owner,Approval_Reference,Status,Notes
+EQ-001,HIL host,TBD,TBD,TBD,TBD,TBD,Isolated test VLAN,TBD,N/A,Outputs disabled,Configuration manager,TBD,PENDING,
+EQ-002,Bench signal controller or approved emulator,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Certified isolation boundary,Vendor-declared and engineer-approved,TBD,TBD,PENDING,
+EQ-003,Signal load bank/state monitor,TBD,TBD,TBD,N/A,TBD,Discrete or vendor test bus,TBD,No roadside connection,De-energised,TBD,TBD,PENDING,
+EQ-004,Eastbound detector simulator,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Read-only input path,Disconnected/invalid,TBD,TBD,PENDING,
+EQ-005,Westbound detector simulator,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Read-only input path,Disconnected/invalid,TBD,TBD,PENDING,
+EQ-006,Pedestrian demand/occupancy simulator,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Read-only input path,WAIT/TBD,TBD,TBD,PENDING,
+EQ-007,Emergency-priority simulator,TBD,TBD,TBD,TBD,TBD,TBD,TBD,Authenticated test-only input,No request,TBD,TBD,PENDING,
+EQ-008,Network switch and capture tap,TBD,TBD,TBD,TBD,TBD,Ethernet/TBD,TBD,Offline default-deny network,Ports closed,TBD,TBD,PENDING,
+EQ-009,Controlled time source,TBD,TBD,TBD,TBD,TBD,NTP/PTP/TBD,TBD,Offline time distribution,Hold/quarantine on invalid time,TBD,TBD,PENDING,
+EQ-010,Power supply/UPS/isolation transformer,TBD,TBD,TBD,N/A,TBD,Electrical,TBD,Certified isolation and protection,De-energised,TBD,TBD,PENDING,
+EQ-011,Emergency stop,TBD,TBD,TBD,N/A,TBD,Hardwired,TBD,Direct energy removal,De-energised,Electrical/bench engineer,TBD,PENDING,
+EQ-012,Append-only audit and backup storage,TBD,TBD,TBD,TBD,TBD,Encrypted storage API,TBD,Network/storage isolation,Write protected,TBD,TBD,PENDING,

@@ -2,7 +2,7 @@
 
 ## Status and boundary
 
-SmartCross 2.2 is an educational, deterministic simulation. It is not an MPAJ operational system, is not affiliated with or endorsed by MPAJ, and is not connected to live CCTV, ANPR databases, traffic signals, roadside sensors, enforcement systems or emergency dispatch.
+SmartCross is an educational, deterministic simulation. It is not an MPAJ operational system, is not affiliated with or endorsed by MPAJ, and is not connected to live CCTV, ANPR databases, traffic signals, roadside sensors, enforcement systems or emergency dispatch.
 
 ## Accessibility commitments
 

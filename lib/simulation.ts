@@ -2,6 +2,7 @@ import { z } from "zod";
 import { assessCameraFallback, cameraFallbackEventLog, DEGRADED_PROTECTED_WALK_SECONDS, DEFAULT_SECONDARY_SAFETY_INPUTS, type SecondarySafetyInputs } from "@/lib/camera-fallback";
 import { motionFramesFor, motionTimingsFor, type MotionFrame } from "@/lib/motion";
 import { normaliseDisplayText, normaliseTextPayload } from "@/lib/text-standard";
+import { resolveSafetyDecision } from "@/lib/safety-orchestrator";
 import { TIMELINE_STAGES, type ConfidenceAssessment, type CrossingMode, type EventLogEntry, type MockNotificationRecipient, type OperatingConditions, type Scenario, type ScenarioId, type Severity, type SignalResponse, type SimulationResult, type TimelineStage, type ViolationCategory } from "@/lib/types";
 
 type OperatingConditionInput = Pick<OperatingConditions, "weather" | "lighting" | "visibility">;
@@ -270,7 +271,6 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
   const fallback = assessCameraFallback(input.operatingConditions, rawInput.manualCrossingRequest === true, {
     ...secondarySafetyInputs,
     controllerAvailable: secondarySafetyInputs.controllerAvailable && scenario.severity !== "critical",
-    stopLinesClear: secondarySafetyInputs.stopLinesClear && !scenario.violation,
   });
   const baseSignal = responseFor(scenario);
   const signal: SignalResponse = fallback.active ? {
@@ -288,12 +288,13 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
   };
   if (signal.pedestrian === "WALK" && signal.vehicle !== "STOP") throw new Error("Unsafe signal conflict rejected.");
 
-  const rawMotionFrames = motionFramesFor(scenario.id, input.mode);
+  const motionScenarioId = fallback.protectedCrossingVerified ? protectedFallbackScenarioId(input.mode) : scenario.id;
+  const rawMotionFrames = motionFramesFor(motionScenarioId, input.mode);
   const motionFrames = fallback.protectedCrossingVerified
     ? rawMotionFrames
     : rawMotionFrames.map((frame) => applyConfidenceSafetyOverride(frame, confidenceAssessment));
   const notificationRecipients = notificationRecipientsFor(scenario);
-  const motionTimings = motionTimingsFor(scenario.id, input.mode);
+  const motionTimings = motionTimingsFor(motionScenarioId, input.mode);
   if (fallback.protectedCrossingVerified) {
     const walkIndexes = motionFrames.map((frame, index) => frame.pedestrianSignal === "WALK" && frame.routeClear ? index : -1).filter((index) => index >= 0);
     walkIndexes.forEach((index, order) => {
@@ -317,6 +318,8 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
   });
 
   const categoryForFrame: EventLogEntry["category"][] = ["sensor", "sensor", "detection", "controller", "safety", "safety", "outcome"];
+  const cctvDirection = evidenceDirectionFor(motionFrames, scenario.id);
+  const cctvCameraId = cctvDirection === "Eastbound" ? "CCTV EB-01" : "CCTV WB-01";
   const standardEventLog = motionFrames.map((frame, index) => {
     const criticalContext = scenario.severity === "critical" && index === 4
       ? ` Critical trigger metadata records ${scenario.label}. The affected actor is Vehicle A. The location is the ${input.mode === "school" ? "school forecourt and direct crossing route" : "MPAJ representative mid-block crossing"}. The system response uses three short local alarm tones, sets both vehicle indicators to STOP, sets the pedestrian indicator to HOLD, and places local mock records for ${notificationRecipients.map((recipient) => recipient.name).join(", ")}.`
@@ -325,12 +328,22 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
       id: `${input.scenarioId}-${index}`,
       timestamp: timeline[index].timestamp,
       category: categoryForFrame[index],
-      message: normaliseDisplayText(`${TIMELINE_STAGES[index]}: ${frame.action} Vehicle A is ${frame.vehicleA.state} at ${frame.vehicleA.speed} km/h. Vehicle B is ${frame.vehicleB.state} at ${frame.vehicleB.speed} km/h. The pedestrian state is ${frame.pedestrian.state}. The active sensor is ${frame.activeSensor}. Risk is ${frame.risk}. The controller state is ${frame.controller}. The vehicle signal is ${frame.vehicleSignal}, and the pedestrian signal is ${frame.pedestrianSignal}.${index === 0 ? ` Operating conditions: ${input.operatingConditions.weather}, ${input.operatingConditions.lighting}, visibility ${input.operatingConditions.visibility}, sensor ${input.operatingConditions.sensorHealth}. Rain automatically includes wet-road ponding and reduced vehicle traction. Combined environmental input quality is ${Math.round(input.operatingConditions.conditionQuality * 100)} percent. Simulated system detection confidence is ${Math.round(detectionConfidence * 100)} percent; classification: ${confidenceAssessment.label}; required response: ${confidenceAssessment.action}` : ""}${scenario.violation && index === 2 ? ` CCTV V2-01 activates at the Detected stage and records synthetic plate ${syntheticPlateFor(scenario.id, input.mode)} for authorised review; no live ANPR lookup occurs.` : ""}${criticalContext} ${index === 6 ? `Local deterministic simulation only. ${scenario.violation || confidenceAssessment.humanReviewRequired ? "Human confirmation is required. " : ""}${confidenceAssessment.conclusionPermitted ? "" : "No automated violation conclusion is permitted. "}No external dispatch occurs.` : ""}`.trim(), "simulator"),
+      message: normaliseDisplayText(`${TIMELINE_STAGES[index]}: ${frame.action} Vehicle A is ${frame.vehicleA.state} at ${frame.vehicleA.speed} km/h. Vehicle B is ${frame.vehicleB.state} at ${frame.vehicleB.speed} km/h. The pedestrian state is ${frame.pedestrian.state}. The active sensor is ${frame.activeSensor}. Risk is ${frame.risk}. The controller state is ${frame.controller}. The vehicle signal is ${frame.vehicleSignal}, and the pedestrian signal is ${frame.pedestrianSignal}.${index === 0 ? ` Operating conditions: ${input.operatingConditions.weather}, ${input.operatingConditions.lighting}, visibility ${input.operatingConditions.visibility}, sensor ${input.operatingConditions.sensorHealth}. Rain automatically includes wet-road ponding and reduced vehicle traction. Combined environmental input quality is ${Math.round(input.operatingConditions.conditionQuality * 100)} percent. Simulated system detection confidence is ${Math.round(detectionConfidence * 100)} percent; classification: ${confidenceAssessment.label}; required response: ${confidenceAssessment.action}` : ""}${scenario.violation && index === 2 ? ` ${cctvCameraId} supplements radar tracking at the Detected stage and records synthetic plate ${syntheticPlateFor(scenario.id, input.mode)} for authorised review; no live ANPR lookup occurs.` : ""}${criticalContext} ${index === 6 ? `Local deterministic simulation only. ${scenario.violation || confidenceAssessment.humanReviewRequired ? "Human confirmation is required. " : ""}${confidenceAssessment.conclusionPermitted ? "" : "No automated violation conclusion is permitted. "}No external dispatch occurs.` : ""}`.trim(), "simulator"),
     };
   });
   const eventLog = fallback.active && rawInput.manualCrossingRequest
     ? cameraFallbackEventLog(baseTime, input.operatingConditions.conditionQuality, fallback, rawInput.duplicateButtonPresses ?? 0)
     : standardEventLog;
+  const safetyDecision = resolveSafetyDecision({
+    mode: input.mode === "school" ? "SCHOOL" : "NORMAL",
+    immediateCollisionRisk: scenario.severity === "critical",
+    stopLineIntrusion: scenario.id.includes("red-signal") || scenario.id.includes("stop-line"),
+    clearanceVerified: !scenario.violation || fallback.protectedCrossingVerified,
+    pedestrianDemand: !scenario.violation || rawInput.manualCrossingRequest === true,
+    independentFallbackVerified: fallback.protectedCrossingVerified,
+    sensorState: input.operatingConditions.sensorHealth === "degraded" ? "degraded" : input.operatingConditions.sensorHealth === "constrained" ? "degraded" : "healthy",
+    aiConfidence: detectionConfidence,
+  });
 
   return {
     sessionId: `SIM-${baseTime.getTime()}`,
@@ -344,11 +357,12 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
     confidenceAssessment,
     incident: scenario.severity === "critical",
     emergencyReviewRequired: scenario.severity === "critical" || confidenceAssessment.humanReviewRequired,
+    safetyDecision,
     cctvEvidence: scenario.violation ? {
-      cameraId: "CCTV V2-01",
+      cameraId: cctvCameraId,
       capturedAt: timeline[2].timestamp,
       plateNumber: syntheticPlateFor(scenario.id, input.mode),
-      vehicleDirection: evidenceDirectionFor(motionFrames, scenario.id),
+      vehicleDirection: cctvDirection,
       detectedCondition: confidenceAssessment.conclusionPermitted ? scenario.label : `Unconfirmed possible condition: ${scenario.label}`,
       recognitionConfidence: Math.max(0, Number((detectionConfidence - 0.03).toFixed(2))),
       captureStage: "Detected",
@@ -365,6 +379,10 @@ export function runSimulation(rawInput: { mode: CrossingMode; scenarioId: Scenar
       duplicatePresses: rawInput.duplicateButtonPresses ?? 0,
     } : undefined,
   };
+}
+
+export function protectedFallbackScenarioId(mode: CrossingMode): ScenarioId {
+  return `${mode}-no-violation`;
 }
 
 export function getProgress(timeline: TimelineStage[]): number {
